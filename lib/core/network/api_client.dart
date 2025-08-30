@@ -33,6 +33,12 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          if (AppConfig.enableLogging) {
+            print('🌐 API Request: ${options.method} ${options.path}');
+            print('   Headers: ${options.headers}');
+            print('   Data: ${options.data}');
+          }
+          
           // Add auth token if available
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString(AppConstants.tokenKey);
@@ -42,9 +48,19 @@ class ApiClient {
           handler.next(options);
         },
         onResponse: (response, handler) {
+          if (AppConfig.enableLogging) {
+            print('✅ API Response: ${response.statusCode} ${response.requestOptions.path}');
+            print('   Data: ${response.data}');
+          }
           handler.next(response);
         },
         onError: (error, handler) {
+          if (AppConfig.enableLogging) {
+            print('❌ API Error: ${error.type} ${error.response?.statusCode} ${error.requestOptions.path}');
+            print('   Message: ${error.message}');
+            print('   Response: ${error.response?.data}');
+          }
+          
           // Handle common errors
           if (error.response?.statusCode == 401) {
             // Handle unauthorized access
@@ -106,14 +122,16 @@ class ApiClient {
       case DioExceptionType.receiveTimeout:
         return Exception('Connection timeout. Please check your internet connection.');
       case DioExceptionType.badResponse:
-        // Don't convert to generic exception, let the calling code handle it
+        // Return the original DioException to preserve error details
         return error;
       case DioExceptionType.cancel:
         return Exception('Request was cancelled');
       case DioExceptionType.connectionError:
-        return Exception('No internet connection');
+        return Exception('No internet connection. Please check your network connection.');
+      case DioExceptionType.unknown:
+        return Exception('Unknown network error: ${error.message}');
       default:
-        return Exception('An unexpected error occurred');
+        return Exception('An unexpected error occurred: ${error.message}');
     }
   }
 }

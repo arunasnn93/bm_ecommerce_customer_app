@@ -7,6 +7,10 @@ import '../../features/auth/domain/usecases/send_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/domain/usecases/check_user_exists_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/store/data/datasources/store_remote_data_source.dart';
+import '../../features/store/data/repositories/store_repository_impl.dart';
+import '../../features/store/domain/usecases/get_store_images_usecase.dart';
+import '../../features/store/presentation/bloc/store_bloc.dart';
 
 class DependencyInjection {
   static Future<void> init() async {
@@ -37,6 +41,18 @@ class DependencyInjection {
       verifyOtpUseCase: verifyOtpUseCase,
       checkUserExistsUseCase: checkUserExistsUseCase,
     );
+    
+    // Store Data Sources
+    final storeRemoteDataSource = StoreRemoteDataSourceImpl(apiClient);
+    
+    // Store Repository
+    final storeRepository = StoreRepositoryImpl(storeRemoteDataSource);
+    
+    // Store Use Cases
+    final getStoreImagesUseCase = GetStoreImagesUseCase(storeRepository);
+    
+    // Store BLoC
+    final storeBloc = StoreBloc(getStoreImagesUseCase: getStoreImagesUseCase);
     
     // Register dependencies (you can use a service locator like get_it here)
     // For now, we'll pass them directly to the app
@@ -70,5 +86,22 @@ class DependencyInjection {
       verifyOtpUseCase: verifyOtpUseCase,
       checkUserExistsUseCase: checkUserExistsUseCase,
     );
+  }
+  
+  static Future<StoreBloc> getStoreBloc() async {
+    // Core
+    final apiClient = ApiClient();
+    
+    // Store Data Sources
+    final storeRemoteDataSource = StoreRemoteDataSourceImpl(apiClient);
+    
+    // Store Repository
+    final storeRepository = StoreRepositoryImpl(storeRemoteDataSource);
+    
+    // Store Use Cases
+    final getStoreImagesUseCase = GetStoreImagesUseCase(storeRepository);
+    
+    // Store BLoC
+    return StoreBloc(getStoreImagesUseCase: getStoreImagesUseCase);
   }
 }

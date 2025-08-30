@@ -90,8 +90,18 @@ class JwtService {
     final token = await getStoredToken();
     if (token == null) return false;
     
+    // For server-generated tokens, we'll assume they're valid for now
+    // In a real app, you might want to validate them with the server
+    // For now, we'll just check if the token exists and is not empty
+    if (token.trim().isEmpty) return false;
+    
+    // Try to validate as JWT first (for backward compatibility)
     final payload = validateToken(token);
-    return payload != null;
+    if (payload != null) return true;
+    
+    // If it's not a valid JWT, assume it's a server-generated token
+    // and consider it valid (you might want to add server validation here)
+    return true;
   }
   
   /// Get user data from stored token
@@ -99,7 +109,13 @@ class JwtService {
     final token = await getStoredToken();
     if (token == null) return null;
     
-    return validateToken(token);
+    // Try to validate as JWT first
+    final payload = validateToken(token);
+    if (payload != null) return payload;
+    
+    // If it's not a valid JWT, return null for server-generated tokens
+    // You might want to store user data separately for server tokens
+    return null;
   }
   
   /// Generate HMAC-SHA256 signature

@@ -5,6 +5,7 @@ import 'core/constants/app_text_styles.dart';
 import 'core/config/app_config.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
+import 'features/store/presentation/bloc/store_bloc.dart';
 import 'shared/services/dependency_injection.dart';
 
 void main() async {
@@ -52,10 +53,36 @@ class BeenaMartApp extends StatelessWidget {
         
         final authBloc = snapshot.data!;
         
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>.value(value: authBloc),
-          ],
+        return FutureBuilder<StoreBloc>(
+          future: DependencyInjection.getStoreBloc(),
+          builder: (context, storeSnapshot) {
+            if (storeSnapshot.connectionState == ConnectionState.waiting) {
+              return const MaterialApp(
+                home: Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+            }
+            
+            if (storeSnapshot.hasError) {
+              return MaterialApp(
+                home: Scaffold(
+                  body: Center(
+                    child: Text('Error: ${storeSnapshot.error}'),
+                  ),
+                ),
+              );
+            }
+            
+            final storeBloc = storeSnapshot.data!;
+            
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<AuthBloc>.value(value: authBloc),
+                BlocProvider<StoreBloc>.value(value: storeBloc),
+              ],
           child: MaterialApp(
         title: 'Beena Mart',
         debugShowCheckedModeBanner: false,
@@ -111,6 +138,8 @@ class BeenaMartApp extends StatelessWidget {
                      '/splash': (context) => const SplashPage(),
                    },
       ),
+            );
+          },
         );
       },
     );

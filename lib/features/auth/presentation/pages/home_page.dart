@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../bloc/auth_bloc.dart';
+import '../../../store/presentation/pages/virtual_tour_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -95,7 +96,11 @@ class HomePage extends StatelessWidget {
                   'Take a Virtual Tour',
                   Icons.view_in_ar,
                   AppColors.secondary,
-                  () => _showComingSoon(context, 'Virtual Tour'),
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const VirtualTourPage(),
+                    ),
+                  ),
                 ),
                 _buildSectionCard(
                   context,

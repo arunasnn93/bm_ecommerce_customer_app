@@ -243,7 +243,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         
                         const SizedBox(height: 16),
                         
-                        // Name Input (for new users)
+                        // Name Input (only shown for new users)
                         if (_showNameField) ...[
                           CustomTextField(
                             controller: _nameController,
@@ -263,7 +263,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                           
                           const SizedBox(height: 16),
                           
-                          // Address Input (for new users)
+                          // Address Input (only shown for new users)
                           CustomTextField(
                             controller: _addressController,
                             focusNode: _addressFocusNode,
@@ -344,13 +344,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     if (_formKey.currentState!.validate()) {
       final otp = _otpController.text;
       
-      // For new users, name and address are always required
-      final name = _showNameField ? _nameController.text.trim() : null;
-      final address = _showNameField ? _addressController.text.trim() : null;
+      // Always get name and address from the form fields
+      final name = _nameController.text.trim();
+      final address = _addressController.text.trim();
       
-      // Additional validation for new users
+      // For new users, name and address are required
       if (_showNameField) {
-        if (name == null || name.isEmpty) {
+        if (name.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enter your name'),
@@ -360,7 +360,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           return;
         }
         
-        if (address == null || address.isEmpty) {
+        if (address.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enter your address'),
@@ -375,8 +375,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         VerifyOtpRequested(
           mobileNumber: widget.mobileNumber,
           otp: otp,
-          name: name,
-          address: address,
+          name: name.isEmpty ? null : name,
+          address: address.isEmpty ? null : address,
         ),
       );
     }

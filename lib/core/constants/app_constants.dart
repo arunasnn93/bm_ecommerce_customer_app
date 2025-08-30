@@ -12,6 +12,9 @@ class AppConstants {
   static const String checkUserExistsEndpoint = '/auth/check-user';
   static const String refreshTokenEndpoint = '/auth/refresh';
   static const String logoutEndpoint = '/auth/logout';
+  
+  // Store API Endpoints
+  static const String storeImagesEndpoint = '/api/store-images';
   static const String userProfileEndpoint = '/user/profile';
   
   // Storage Keys

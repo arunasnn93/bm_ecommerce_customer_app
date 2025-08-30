@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/config/app_config.dart';
@@ -172,11 +174,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         updatedAt: DateTime.now(), // Not provided in this response
       );
       
-      // Use server-generated access token instead of generating our own JWT
-      final accessToken = verifyOtpResponse.accessToken ?? 'demo_token_${DateTime.now().millisecondsSinceEpoch}';
+      // Use server-generated access token from session
+      final accessToken = verifyOtpResponse.session.accessToken;
       
       // Store the access token
       await JwtService.storeToken(accessToken);
+      
+      // Store user data separately for server-generated tokens
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.userKey, json.encode(userModel.toJson()));
       
       // Create AuthResultModel
       final authResult = AuthResultModel(

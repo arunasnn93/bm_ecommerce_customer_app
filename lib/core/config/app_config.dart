@@ -5,7 +5,7 @@ enum Environment {
 }
 
 class AppConfig {
-  static Environment environment = Environment.development;
+  static Environment environment = Environment.production;
   
   // API Configuration
   static String get baseUrl {
@@ -15,11 +15,32 @@ class AppConfig {
       case Environment.staging:
         return 'https://staging-api.beenamart.com';
       case Environment.production:
-        return 'https://api.beenamart.com';
+        return 'https://bm-ecommerce-api-production.up.railway.app';
     }
   }
   
-  static String get apiVersion => ''; // No /v1 prefix for localhost:3000
+  // Supabase Storage Configuration
+  static String get supabaseStorageUrl {
+    switch (environment) {
+      case Environment.development:
+        return 'https://fitobjouvvxbpqdcgxvg.supabase.co/storage/v1/object/public'; // Replace with your Supabase project URL
+      case Environment.staging:
+        return 'https://fitobjouvvxbpqdcgxvg.supabase.co/storage/v1/object/public'; // Replace with your staging Supabase URL
+      case Environment.production:
+        return 'https://fitobjouvvxbpqdcgxvg.supabase.co/storage/v1/object/public'; // Replace with your production Supabase URL
+    }
+  }
+  
+  static String get apiVersion {
+    switch (environment) {
+      case Environment.development:
+        return ''; // No /v1 prefix for localhost:3000
+      case Environment.staging:
+        return '/v1'; // Add /v1 prefix for staging
+      case Environment.production:
+        return ''; // No /v1 prefix for production
+    }
+  }
   
   // Feature Flags
   static bool get useDemoMode {
@@ -34,8 +55,8 @@ class AppConfig {
   }
   
   // Timeouts
-  static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration connectionTimeout = Duration(seconds: 60); // Increased for production
+  static const Duration receiveTimeout = Duration(seconds: 60); // Increased for production
   
   // OTP Configuration
   static const int otpLength = 6;
@@ -50,7 +71,7 @@ class AppConfig {
       case Environment.staging:
         return true;
       case Environment.production:
-        return false;
+        return true; // Temporarily enable logging for debugging
     }
   }
   

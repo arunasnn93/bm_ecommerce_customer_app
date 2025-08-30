@@ -73,12 +73,20 @@ class UserResponse {
 
 @JsonSerializable()
 class SessionResponse {
-  final Map<String, dynamic> properties;
-  final Map<String, dynamic> user;
+  @JsonKey(name: 'access_token')
+  final String accessToken;
+  @JsonKey(name: 'refresh_token')
+  final String refreshToken;
+  @JsonKey(name: 'expires_in')
+  final int expiresIn;
+  @JsonKey(name: 'token_type')
+  final String tokenType;
   
   const SessionResponse({
-    required this.properties,
-    required this.user,
+    required this.accessToken,
+    required this.refreshToken,
+    required this.expiresIn,
+    required this.tokenType,
   });
   
   factory SessionResponse.fromJson(Map<String, dynamic> json) => _$SessionResponseFromJson(json);
