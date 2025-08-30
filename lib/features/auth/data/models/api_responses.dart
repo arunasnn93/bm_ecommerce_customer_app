@@ -89,12 +89,46 @@ class SessionResponse {
 class VerifyOtpResponse {
   final UserResponse user;
   final SessionResponse session;
+  final String? accessToken;
   
   const VerifyOtpResponse({
     required this.user,
     required this.session,
+    this.accessToken,
   });
   
   factory VerifyOtpResponse.fromJson(Map<String, dynamic> json) => _$VerifyOtpResponseFromJson(json);
   Map<String, dynamic> toJson() => _$VerifyOtpResponseToJson(this);
+}
+
+@JsonSerializable()
+class CheckUserResponse {
+  final bool exists;
+  final UserInfo? user;
+  
+  const CheckUserResponse({
+    required this.exists,
+    this.user,
+  });
+  
+  factory CheckUserResponse.fromJson(Map<String, dynamic> json) => _$CheckUserResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$CheckUserResponseToJson(this);
+}
+
+@JsonSerializable()
+class UserInfo {
+  final String id;
+  final String mobile;
+  final String name;
+  final String? address;
+  
+  const UserInfo({
+    required this.id,
+    required this.mobile,
+    required this.name,
+    this.address,
+  });
+  
+  factory UserInfo.fromJson(Map<String, dynamic> json) => _$UserInfoFromJson(json);
+  Map<String, dynamic> toJson() => _$UserInfoToJson(this);
 }

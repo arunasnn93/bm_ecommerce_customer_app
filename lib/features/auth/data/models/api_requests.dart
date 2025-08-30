@@ -20,7 +20,7 @@ class VerifyOtpRequest {
   final String otp;
   final String? name;
   final String? address;
-  @JsonKey(name: 'fcm_token')
+  @JsonKey(name: 'fcm_token', includeIfNull: false)
   final String? fcmToken;
   
   const VerifyOtpRequest({
@@ -46,4 +46,16 @@ class RefreshTokenRequest {
   
   factory RefreshTokenRequest.fromJson(Map<String, dynamic> json) => _$RefreshTokenRequestFromJson(json);
   Map<String, dynamic> toJson() => _$RefreshTokenRequestToJson(this);
+}
+
+@JsonSerializable()
+class CheckUserRequest {
+  final String mobile;
+  
+  const CheckUserRequest({
+    required this.mobile,
+  });
+  
+  factory CheckUserRequest.fromJson(Map<String, dynamic> json) => _$CheckUserRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$CheckUserRequestToJson(this);
 }

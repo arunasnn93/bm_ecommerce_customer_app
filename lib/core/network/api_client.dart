@@ -106,9 +106,8 @@ class ApiClient {
       case DioExceptionType.receiveTimeout:
         return Exception('Connection timeout. Please check your internet connection.');
       case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        final message = error.response?.data?['message'] ?? 'Server error occurred';
-        return Exception('Error $statusCode: $message');
+        // Don't convert to generic exception, let the calling code handle it
+        return error;
       case DioExceptionType.cancel:
         return Exception('Request was cancelled');
       case DioExceptionType.connectionError:

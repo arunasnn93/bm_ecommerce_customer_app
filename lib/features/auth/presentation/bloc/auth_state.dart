@@ -13,6 +13,26 @@ class AuthLoading extends AuthState {}
 
 class OtpSentSuccessfully extends AuthState {}
 
+class CheckUserExistsLoading extends AuthState {}
+
+class CheckUserExistsSuccess extends AuthState {
+  final CheckUserResponse userData;
+  
+  const CheckUserExistsSuccess(this.userData);
+  
+  @override
+  List<Object> get props => [userData];
+}
+
+class CheckUserExistsFailure extends AuthState {
+  final String message;
+  
+  const CheckUserExistsFailure(this.message);
+  
+  @override
+  List<Object> get props => [message];
+}
+
 class AuthSuccess extends AuthState {
   final AuthResult authResult;
   

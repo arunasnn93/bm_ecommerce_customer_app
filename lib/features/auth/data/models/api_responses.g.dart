@@ -69,14 +69,18 @@ Map<String, dynamic> _$UserResponseToJson(UserResponse instance) =>
 
 SessionResponse _$SessionResponseFromJson(Map<String, dynamic> json) =>
     SessionResponse(
-      properties: json['properties'] as Map<String, dynamic>,
-      user: json['user'] as Map<String, dynamic>,
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+      expiresIn: (json['expires_in'] as num).toInt(),
+      tokenType: json['token_type'] as String,
     );
 
 Map<String, dynamic> _$SessionResponseToJson(SessionResponse instance) =>
     <String, dynamic>{
-      'properties': instance.properties,
-      'user': instance.user,
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
+      'expires_in': instance.expiresIn,
+      'token_type': instance.tokenType,
     };
 
 VerifyOtpResponse _$VerifyOtpResponseFromJson(Map<String, dynamic> json) =>
@@ -84,10 +88,40 @@ VerifyOtpResponse _$VerifyOtpResponseFromJson(Map<String, dynamic> json) =>
       user: UserResponse.fromJson(json['user'] as Map<String, dynamic>),
       session:
           SessionResponse.fromJson(json['session'] as Map<String, dynamic>),
+      accessToken: json['accessToken'] as String?,
     );
 
 Map<String, dynamic> _$VerifyOtpResponseToJson(VerifyOtpResponse instance) =>
     <String, dynamic>{
       'user': instance.user,
       'session': instance.session,
+      'accessToken': instance.accessToken,
+    };
+
+CheckUserResponse _$CheckUserResponseFromJson(Map<String, dynamic> json) =>
+    CheckUserResponse(
+      exists: json['exists'] as bool,
+      user: json['user'] == null
+          ? null
+          : UserInfo.fromJson(json['user'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$CheckUserResponseToJson(CheckUserResponse instance) =>
+    <String, dynamic>{
+      'exists': instance.exists,
+      'user': instance.user,
+    };
+
+UserInfo _$UserInfoFromJson(Map<String, dynamic> json) => UserInfo(
+      id: json['id'] as String,
+      mobile: json['mobile'] as String,
+      name: json['name'] as String,
+      address: json['address'] as String?,
+    );
+
+Map<String, dynamic> _$UserInfoToJson(UserInfo instance) => <String, dynamic>{
+      'id': instance.id,
+      'mobile': instance.mobile,
+      'name': instance.name,
+      'address': instance.address,
     };

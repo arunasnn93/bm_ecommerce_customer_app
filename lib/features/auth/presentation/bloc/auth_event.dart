@@ -16,6 +16,15 @@ class SendOtpRequested extends AuthEvent {
   List<Object> get props => [mobileNumber];
 }
 
+class CheckUserExistsRequested extends AuthEvent {
+  final String mobileNumber;
+  
+  const CheckUserExistsRequested(this.mobileNumber);
+  
+  @override
+  List<Object> get props => [mobileNumber];
+}
+
 class VerifyOtpRequested extends AuthEvent {
   final String mobileNumber;
   final String otp;

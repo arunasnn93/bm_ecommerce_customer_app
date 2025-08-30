@@ -12,6 +12,7 @@ import 'auth_demo_data_source.dart';
 abstract class AuthRemoteDataSource {
   Future<void> sendOtp(String mobileNumber);
   Future<AuthResultModel> verifyOtp(String mobileNumber, String otp, {String? name, String? address});
+  Future<CheckUserResponse> checkUserExists(String mobileNumber);
   Future<UserModel?> getCurrentUser();
   Future<void> logout();
   Future<bool> isAuthenticated();
@@ -79,11 +80,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         print('   Status Code: ${e.response?.statusCode}');
         print('   Error Message: ${e.message}');
         print('   Response Data: ${e.response?.data}');
+        print('   Response Headers: ${e.response?.headers}');
         
         if (e.response?.statusCode == 400) {
-          throw Exception('Invalid mobile number format');
-        } else if (e.response?.statusCode == 429) {
-          throw Exception('Too many requests. Please try again later.');
+          // Log the detailed error response
+          print('   🔍 Detailed 400 Error Response:');
+          print('      Data: ${e.response?.data}');
+          print('      Message: ${e.response?.data?['message']}');
+          print('      Error: ${e.response?.data?['error']}');
+          throw Exception('Invalid OTP. Please check and try again.');
+        } else if (e.response?.statusCode == 401) {
+          throw Exception('OTP expired. Please request a new one.');
+        } else if (e.response?.statusCode == 404) {
+          throw Exception('Invalid mobile number or OTP.');
         } else if (e.response?.statusCode == 500) {
           throw Exception('Server error. Please try again.');
         } else {
@@ -118,8 +127,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('   Endpoint: ${AppConstants.verifyOtpEndpoint}');
       print('   Full URL: ${AppConfig.baseUrl}${AppConfig.apiVersion}${AppConstants.verifyOtpEndpoint}');
       print('   Request Body: $requestBody');
+      print('   Request Body Type: ${requestBody.runtimeType}');
       print('   Mobile Number: $mobileNumber');
       print('   Name: $name');
+      print('   Address: $address');
+      print('   OTP: $otp');
       
       final response = await apiClient.post(
         AppConstants.verifyOtpEndpoint,
@@ -160,21 +172,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         updatedAt: DateTime.now(), // Not provided in this response
       );
       
-      // Generate JWT token
-      final jwtToken = JwtService.generateToken(
-        userId: userResponse.id,
-        name: userResponse.name,
-        mobileNumber: userResponse.mobile,
-        address: address ?? 'Not provided', // Use provided address or default
-      );
+      // Use server-generated access token instead of generating our own JWT
+      final accessToken = verifyOtpResponse.accessToken ?? 'demo_token_${DateTime.now().millisecondsSinceEpoch}';
       
-      // Store JWT token
-      await JwtService.storeToken(jwtToken);
+      // Store the access token
+      await JwtService.storeToken(accessToken);
       
       // Create AuthResultModel
       final authResult = AuthResultModel(
         user: userModel,
-        token: jwtToken,
+        token: accessToken,
         expiresAt: DateTime.now().add(AppConstants.tokenExpiryDuration),
       );
       
@@ -188,8 +195,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         print('   Status Code: ${e.response?.statusCode}');
         print('   Error Message: ${e.message}');
         print('   Response Data: ${e.response?.data}');
+        print('   Response Headers: ${e.response?.headers}');
         
         if (e.response?.statusCode == 400) {
+          // Log the detailed error response
+          print('   🔍 Detailed 400 Error Response:');
+          print('      Raw Data: ${e.response?.data}');
+          print('      Data Type: ${e.response?.data.runtimeType}');
+          if (e.response?.data is Map) {
+            print('      Message: ${e.response?.data['message']}');
+            print('      Error: ${e.response?.data['error']}');
+            print('      Details: ${e.response?.data['details']}');
+          }
           throw Exception('Invalid OTP. Please check and try again.');
         } else if (e.response?.statusCode == 401) {
           throw Exception('OTP expired. Please request a new one.');
@@ -205,6 +222,52 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
   
+  @override
+  Future<CheckUserResponse> checkUserExists(String mobileNumber) async {
+    try {
+      final request = CheckUserRequest(mobile: mobileNumber);
+      final requestBody = request.toJson();
+
+      final response = await apiClient.post(
+        AppConstants.checkUserExistsEndpoint,
+        data: requestBody,
+      );
+
+      final apiResponse = ApiResponse<CheckUserResponse>.fromJson(
+        response.data,
+        (json) => CheckUserResponse.fromJson(json),
+      );
+
+      if (!apiResponse.success) {
+        print('❌ API Error: ${apiResponse.message}');
+        throw Exception(apiResponse.message);
+      }
+
+      print('✅ API Success: ${apiResponse.message}');
+      print('   Response Data: ${apiResponse.data?.toJson()}');
+
+      return apiResponse.data!;
+    } catch (e) {
+      print('💥 API Error: $e');
+      if (e is DioException) {
+        print('   DioException Type: ${e.type}');
+        print('   Status Code: ${e.response?.statusCode}');
+        print('   Error Message: ${e.message}');
+        print('   Response Data: ${e.response?.data}');
+        if (e.response?.statusCode == 400) {
+          throw Exception('Invalid mobile number format');
+        } else if (e.response?.statusCode == 404) {
+          throw Exception('User not found');
+        } else if (e.response?.statusCode == 500) {
+          throw Exception('Server error. Please try again.');
+        } else {
+          throw Exception('Network error. Please check your connection.');
+        }
+      }
+      throw Exception('Failed to check user exists: ${e.toString()}');
+    }
+  }
+
   @override
   Future<UserModel?> getCurrentUser() async {
     try {

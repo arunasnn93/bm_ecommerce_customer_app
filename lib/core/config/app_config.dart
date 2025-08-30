@@ -19,7 +19,7 @@ class AppConfig {
     }
   }
   
-  static String get apiVersion => ''; // Remove /v1 prefix for localhost:3000
+  static String get apiVersion => ''; // No /v1 prefix for localhost:3000
   
   // Feature Flags
   static bool get useDemoMode {

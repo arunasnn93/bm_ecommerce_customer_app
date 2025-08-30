@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/auth_result.dart';
 import '../entities/user.dart';
+import '../entities/check_user_response.dart';
 
 abstract class AuthRepository {
   /// Sends OTP to the provided mobile number
@@ -9,6 +10,9 @@ abstract class AuthRepository {
   
   /// Verifies OTP and returns authentication result
   Future<Either<Failure, AuthResult>> verifyOtp(String mobileNumber, String otp, {String? name, String? address});
+  
+  /// Checks if user exists for the given mobile number
+  Future<Either<Failure, CheckUserResponse>> checkUserExists(String mobileNumber);
   
   /// Gets current user if authenticated
   Future<Either<Failure, User?>> getCurrentUser();

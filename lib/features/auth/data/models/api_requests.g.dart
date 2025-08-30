@@ -31,7 +31,7 @@ Map<String, dynamic> _$VerifyOtpRequestToJson(VerifyOtpRequest instance) =>
       'otp': instance.otp,
       'name': instance.name,
       'address': instance.address,
-      'fcm_token': instance.fcmToken,
+      if (instance.fcmToken case final value?) 'fcm_token': value,
     };
 
 RefreshTokenRequest _$RefreshTokenRequestFromJson(Map<String, dynamic> json) =>
@@ -43,4 +43,14 @@ Map<String, dynamic> _$RefreshTokenRequestToJson(
         RefreshTokenRequest instance) =>
     <String, dynamic>{
       'refresh_token': instance.refreshToken,
+    };
+
+CheckUserRequest _$CheckUserRequestFromJson(Map<String, dynamic> json) =>
+    CheckUserRequest(
+      mobile: json['mobile'] as String,
+    );
+
+Map<String, dynamic> _$CheckUserRequestToJson(CheckUserRequest instance) =>
+    <String, dynamic>{
+      'mobile': instance.mobile,
     };

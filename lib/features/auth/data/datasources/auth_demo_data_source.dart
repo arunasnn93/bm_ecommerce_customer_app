@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../models/auth_result_model.dart';
 import '../models/user_model.dart';
+import '../models/api_responses.dart';
 
 class AuthDemoDataSource {
   // Simulate network delay
@@ -23,6 +24,29 @@ class AuthDemoDataSource {
     // Simulate success response
     // In real implementation, this would be an API call
     print('Demo: OTP sent to $mobileNumber');
+  }
+  
+  Future<CheckUserResponse> checkUserExists(String mobileNumber) async {
+    await Future.delayed(_networkDelay);
+    
+    // Simulate checking if user exists
+    // For demo purposes, assume user exists if mobile number contains '987'
+    final exists = mobileNumber.contains('987');
+    
+    if (exists) {
+      final userInfo = UserInfo(
+        id: '1',
+        mobile: mobileNumber,
+        name: 'Demo User',
+        address: 'Demo Address, Demo City',
+      );
+      
+      print('Demo: User exists for $mobileNumber');
+      return CheckUserResponse(exists: true, user: userInfo);
+    } else {
+      print('Demo: User does not exist for $mobileNumber');
+      return const CheckUserResponse(exists: false, user: null);
+    }
   }
   
   Future<AuthResultModel> verifyOtp(String mobileNumber, String otp, {String? name, String? address}) async {

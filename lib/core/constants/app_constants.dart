@@ -9,6 +9,7 @@ class AppConstants {
   // Auth API Endpoints
   static const String sendOtpEndpoint = '/auth/send-otp';
   static const String verifyOtpEndpoint = '/auth/verify-otp';
+  static const String checkUserExistsEndpoint = '/auth/check-user';
   static const String refreshTokenEndpoint = '/auth/refresh';
   static const String logoutEndpoint = '/auth/logout';
   static const String userProfileEndpoint = '/user/profile';

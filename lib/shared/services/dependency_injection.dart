@@ -5,6 +5,7 @@ import '../../features/auth/data/datasources/auth_local_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/usecases/send_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
+import '../../features/auth/domain/usecases/check_user_exists_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 class DependencyInjection {
@@ -28,11 +29,13 @@ class DependencyInjection {
     // Auth Use Cases
     final sendOtpUseCase = SendOtpUseCase(authRepository);
     final verifyOtpUseCase = VerifyOtpUseCase(authRepository);
+    final checkUserExistsUseCase = CheckUserExistsUseCase(authRepository);
     
     // Auth BLoC
     final authBloc = AuthBloc(
       sendOtpUseCase: sendOtpUseCase,
       verifyOtpUseCase: verifyOtpUseCase,
+      checkUserExistsUseCase: checkUserExistsUseCase,
     );
     
     // Register dependencies (you can use a service locator like get_it here)
@@ -59,11 +62,13 @@ class DependencyInjection {
     // Auth Use Cases
     final sendOtpUseCase = SendOtpUseCase(authRepository);
     final verifyOtpUseCase = VerifyOtpUseCase(authRepository);
+    final checkUserExistsUseCase = CheckUserExistsUseCase(authRepository);
     
     // Auth BLoC
     return AuthBloc(
       sendOtpUseCase: sendOtpUseCase,
       verifyOtpUseCase: verifyOtpUseCase,
+      checkUserExistsUseCase: checkUserExistsUseCase,
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../datasources/auth_local_data_source.dart';
+import '../../domain/entities/check_user_response.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -96,6 +97,30 @@ class AuthRepositoryImpl implements AuthRepository {
       final authResultModel = await remoteDataSource.refreshToken();
       await localDataSource.cacheAuthResult(authResultModel);
       return Right(authResultModel.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckUserResponse>> checkUserExists(String mobileNumber) async {
+    try {
+      final result = await remoteDataSource.checkUserExists(mobileNumber);
+      
+      // Convert data model to domain entity
+      final domainEntity = CheckUserResponse(
+        exists: result.exists,
+        user: result.user != null 
+          ? UserInfo(
+              id: result.user!.id,
+              mobile: result.user!.mobile,
+              name: result.user!.name,
+              address: result.user!.address,
+            )
+          : null,
+      );
+      
+      return Right(domainEntity);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
