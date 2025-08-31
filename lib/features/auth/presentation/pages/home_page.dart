@@ -2,11 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/services/user_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String _welcomeMessage = 'Welcome back!';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWelcomeMessage();
+  }
+
+  Future<void> _loadWelcomeMessage() async {
+    try {
+      final welcomeMessage = await UserService.getWelcomeMessage();
+      if (mounted) {
+        setState(() {
+          _welcomeMessage = welcomeMessage;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading welcome message: $e');
+      // Keep default message if error occurs
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +92,7 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome back!',
+                    _welcomeMessage,
                     style: AppTextStyles.h3.copyWith(
                       color: AppColors.surface,
                     ),
@@ -73,7 +101,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     'Discover amazing products and offers',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.surface.withOpacity(0.9),
+                      color: AppColors.surface.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -189,7 +217,7 @@ class HomePage extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Icon(
