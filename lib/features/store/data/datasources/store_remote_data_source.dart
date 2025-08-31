@@ -80,23 +80,20 @@ class StoreRemoteDataSourceImpl implements StoreRemoteDataSource {
         ? relativeUrl.substring(1) 
         : relativeUrl;
     
-    // For database-stored images, we need to construct the URL to the image serving endpoint
-    // The relativeUrl should be something like "uploads/1756581873836-59323e1d57896a77.jpg"
-    // We need to extract the filename and construct the image serving URL
+    // For database-stored images, they are served directly from the uploads path
+    // The relativeUrl should be something like "uploads/1756612044606-11709c3aae28f55b.png"
+    // We construct the full URL using the backend base URL + relative path
     
-    // Extract filename from the path
-    final pathParts = cleanRelativeUrl.split('/');
-    final fileName = pathParts.last; // Get the filename
-    
-    // Construct the image serving URL
-    // TODO: Update this endpoint when the backend image serving is configured
-    final imageServingUrl = '${AppConfig.baseUrl}/api/images/$fileName';
+    // Construct the full image URL using the relative path
+    final imageServingUrl = '${AppConfig.baseUrl}/$cleanRelativeUrl';
     
     print('   🔗 Database Image URL: $relativeUrl → $imageServingUrl');
-    print('   📁 Filename: $fileName');
+    print('   📁 Relative Path: $cleanRelativeUrl');
     
+    // TODO: Uncomment this section once the image serving endpoint is configured
     // For now, use demo images since the image serving endpoint is not configured
     // This ensures the virtual tour works while the backend image serving is set up
+    /*
     final demoImageMap = {
       '1756581871255-9af89d8add7a5ace.jpg': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop',
       '1756581872717-fd6c66826470a301.jpg': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop',
@@ -109,6 +106,7 @@ class StoreRemoteDataSourceImpl implements StoreRemoteDataSource {
       print('   🔗 Using Demo Image: $fileName → $demoUrl');
       return demoUrl;
     }
+    */
     
     // Return the database image URL (will work once endpoint is configured)
     return imageServingUrl;
