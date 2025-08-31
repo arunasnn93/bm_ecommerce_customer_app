@@ -34,18 +34,12 @@ class StoreRemoteDataSourceImpl implements StoreRemoteDataSource {
       print('   Status Code: ${response.statusCode}');
       print('   Response Data: ${response.data}');
 
-      // Parse the response and construct full URLs
+      // Parse the response - URLs are already complete from the API
       final List<dynamic> imagesData = response.data['data'] ?? [];
       final List<StoreImageModel> storeImages = imagesData.map((json) {
-        // Construct full URL for the image
-        final relativeUrl = json['url'] as String;
-        final fullUrl = _constructFullUrl(relativeUrl);
-        
-        // Create a new JSON object with the full URL
-        final updatedJson = Map<String, dynamic>.from(json);
-        updatedJson['url'] = fullUrl;
-        
-        return StoreImageModel.fromJson(updatedJson);
+        // The API already returns complete Supabase URLs, so use them directly
+        print('   🔗 Using API-provided URL: ${json['url']}');
+        return StoreImageModel.fromJson(json);
       }).toList();
 
       print('✅ API Success: Found ${storeImages.length} store images');
@@ -73,42 +67,5 @@ class StoreRemoteDataSourceImpl implements StoreRemoteDataSource {
     }
   }
   
-  /// Constructs a full URL from a relative path for database-stored images
-  String _constructFullUrl(String relativeUrl) {
-    // Remove leading slash if present
-    final cleanRelativeUrl = relativeUrl.startsWith('/') 
-        ? relativeUrl.substring(1) 
-        : relativeUrl;
-    
-    // For database-stored images, they are served directly from the uploads path
-    // The relativeUrl should be something like "uploads/1756612044606-11709c3aae28f55b.png"
-    // We construct the full URL using the backend base URL + relative path
-    
-    // Construct the full image URL using the relative path
-    final imageServingUrl = '${AppConfig.baseUrl}/$cleanRelativeUrl';
-    
-    print('   🔗 Database Image URL: $relativeUrl → $imageServingUrl');
-    print('   📁 Relative Path: $cleanRelativeUrl');
-    
-    // TODO: Uncomment this section once the image serving endpoint is configured
-    // For now, use demo images since the image serving endpoint is not configured
-    // This ensures the virtual tour works while the backend image serving is set up
-    /*
-    final demoImageMap = {
-      '1756581871255-9af89d8add7a5ace.jpg': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop',
-      '1756581872717-fd6c66826470a301.jpg': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop',
-      '1756581873836-59323e1d57896a77.jpg': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    };
-    
-    // Check if we have a demo image for this filename
-    if (demoImageMap.containsKey(fileName)) {
-      final demoUrl = demoImageMap[fileName]!;
-      print('   🔗 Using Demo Image: $fileName → $demoUrl');
-      return demoUrl;
-    }
-    */
-    
-    // Return the database image URL (will work once endpoint is configured)
-    return imageServingUrl;
-  }
+
 }
