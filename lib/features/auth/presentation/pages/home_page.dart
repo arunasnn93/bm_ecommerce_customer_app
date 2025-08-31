@@ -5,6 +5,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/user_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
+import '../../../orders/presentation/pages/place_order_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -135,7 +136,11 @@ class _HomePageState extends State<HomePage> {
                   'Place an Order',
                   Icons.shopping_cart,
                   AppColors.primary,
-                  () => _showComingSoon(context, 'Place Order'),
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PlaceOrderPage(),
+                    ),
+                  ),
                 ),
                 _buildSectionCard(
                   context,

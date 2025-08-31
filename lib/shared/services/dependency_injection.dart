@@ -11,6 +11,10 @@ import '../../features/store/data/datasources/store_remote_data_source.dart';
 import '../../features/store/data/repositories/store_repository_impl.dart';
 import '../../features/store/domain/usecases/get_store_images_usecase.dart';
 import '../../features/store/presentation/bloc/store_bloc.dart';
+import '../../features/orders/data/datasources/orders_remote_data_source.dart';
+import '../../features/orders/data/repositories/orders_repository_impl.dart';
+import '../../features/orders/domain/usecases/create_order.dart';
+import '../../features/orders/presentation/bloc/orders_bloc.dart';
 
 class DependencyInjection {
   static Future<void> init() async {
@@ -53,6 +57,21 @@ class DependencyInjection {
     
     // Store BLoC
     final storeBloc = StoreBloc(getStoreImagesUseCase: getStoreImagesUseCase);
+    
+    // Orders Data Sources
+    final ordersRemoteDataSource = OrdersRemoteDataSourceImpl(apiClient);
+    
+    // Orders Repository
+    final ordersRepository = OrdersRepositoryImpl(ordersRemoteDataSource);
+    
+    // Orders Use Cases
+    final createOrderUseCase = CreateOrder(ordersRepository);
+    
+    // Orders BLoC
+    final ordersBloc = OrdersBloc(
+      createOrder: createOrderUseCase,
+      ordersRepository: ordersRepository,
+    );
     
     // Register dependencies (you can use a service locator like get_it here)
     // For now, we'll pass them directly to the app
@@ -103,5 +122,25 @@ class DependencyInjection {
     
     // Store BLoC
     return StoreBloc(getStoreImagesUseCase: getStoreImagesUseCase);
+  }
+  
+  static Future<OrdersBloc> getOrdersBloc() async {
+    // Core
+    final apiClient = ApiClient();
+    
+    // Orders Data Sources
+    final ordersRemoteDataSource = OrdersRemoteDataSourceImpl(apiClient);
+    
+    // Orders Repository
+    final ordersRepository = OrdersRepositoryImpl(ordersRemoteDataSource);
+    
+    // Orders Use Cases
+    final createOrderUseCase = CreateOrder(ordersRepository);
+    
+    // Orders BLoC
+    return OrdersBloc(
+      createOrder: createOrderUseCase,
+      ordersRepository: ordersRepository,
+    );
   }
 }
