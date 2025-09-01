@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../../features/auth/data/models/user_model.dart';
+import 'jwt_service.dart';
 
 class UserService {
   /// Get current user's name from stored data
@@ -82,6 +83,20 @@ class UserService {
       return '$greeting, $firstName!';
     } else {
       return '$greeting!';
+    }
+  }
+  
+  /// Get user address from cached user data
+  static Future<String?> getUserAddress() async {
+    try {
+      final user = await getCurrentUser();
+      if (user != null) {
+        return user.address;
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error getting user address: $e');
+      return null;
     }
   }
 }

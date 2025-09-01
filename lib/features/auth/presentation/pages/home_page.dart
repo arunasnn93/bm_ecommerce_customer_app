@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             
             // Main Sections Grid
             GridView.count(
@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             
             // Quick Actions
             Text(
@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             
             _buildQuickActionCard(
               context,

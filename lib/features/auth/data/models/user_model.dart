@@ -11,6 +11,7 @@ class UserModel extends User {
     required super.mobileNumber,
     super.email,
     super.profileImage,
+    super.address,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -26,6 +27,7 @@ class UserModel extends User {
       mobileNumber: user.mobileNumber,
       email: user.email,
       profileImage: user.profileImage,
+      address: user.address,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     );
@@ -38,6 +40,7 @@ class UserModel extends User {
       mobileNumber: mobileNumber,
       email: email,
       profileImage: profileImage,
+      address: address,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

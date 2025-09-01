@@ -344,12 +344,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     if (_formKey.currentState!.validate()) {
       final otp = _otpController.text;
       
-      // Always get name and address from the form fields
-      final name = _nameController.text.trim();
-      final address = _addressController.text.trim();
+      // For existing users, get name and address from user data
+      // For new users, get from form fields
+      String? name;
+      String? address;
       
-      // For new users, name and address are required
       if (_showNameField) {
+        // New user - get from form fields
+        name = _nameController.text.trim();
+        address = _addressController.text.trim();
+        
+        // Validate required fields for new users
         if (name.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -369,14 +374,20 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           );
           return;
         }
+      } else {
+        // Existing user - get from user data
+        if (_userData?.user != null) {
+          name = _userData!.user!.name;
+          address = _userData!.user!.address;
+        }
       }
       
       context.read<AuthBloc>().add(
         VerifyOtpRequested(
           mobileNumber: widget.mobileNumber,
           otp: otp,
-          name: name.isEmpty ? null : name,
-          address: address.isEmpty ? null : address,
+          name: name,
+          address: address,
         ),
       );
     }

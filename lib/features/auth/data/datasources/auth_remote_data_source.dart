@@ -170,6 +170,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         mobileNumber: userResponse.mobile,
         email: null, // Not provided in this response
         profileImage: null, // Not provided in this response
+        address: address, // Use the address passed from OTP verification
         createdAt: DateTime.now(), // Not provided in this response
         updatedAt: DateTime.now(), // Not provided in this response
       );

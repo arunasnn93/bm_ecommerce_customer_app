@@ -37,9 +37,11 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
 
   Future<void> _loadUserData() async {
     final user = await UserService.getCurrentUser();
+    final address = await UserService.getUserAddress();
+    
     if (user != null) {
       setState(() {
-        _deliveryAddress = 'Address will be collected from your profile'; // Address not available in user model
+        _deliveryAddress = address ?? 'Address not available';
         _deliveryPhone = user.mobileNumber;
       });
     }
