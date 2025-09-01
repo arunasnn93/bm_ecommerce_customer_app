@@ -15,7 +15,7 @@ class AppConfig {
       case Environment.staging:
         return 'https://staging-api.beenamart.com';
       case Environment.production:
-        return 'https://bm-ecommerce-api-production.up.railway.app';
+        return 'https://api.groshly.com';
     }
   }
   
