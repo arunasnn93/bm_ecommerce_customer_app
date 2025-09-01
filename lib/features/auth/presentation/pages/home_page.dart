@@ -6,6 +6,7 @@ import '../../../../core/services/user_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
 import '../../../orders/presentation/pages/place_order_page.dart';
+import '../../../orders/presentation/pages/order_history_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -144,10 +145,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildSectionCard(
                   context,
-                  'Previous Orders',
+                  'Order History',
                   Icons.history,
                   AppColors.info,
-                  () => _showComingSoon(context, 'Previous Orders'),
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const OrderHistoryPage(),
+                    ),
+                  ),
                 ),
                 _buildSectionCard(
                   context,

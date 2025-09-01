@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/order.dart';
+import '../../data/models/paginated_orders_response.dart';
 
 abstract class OrdersState extends Equatable {
   const OrdersState();
@@ -14,11 +15,15 @@ class OrdersLoading extends OrdersState {}
 
 class OrdersLoaded extends OrdersState {
   final List<Order> orders;
+  final PaginationInfo? pagination;
 
-  const OrdersLoaded({required this.orders});
+  const OrdersLoaded({
+    required this.orders,
+    this.pagination,
+  });
 
   @override
-  List<Object?> get props => [orders];
+  List<Object?> get props => [orders, pagination];
 }
 
 class OrderLoaded extends OrdersState {

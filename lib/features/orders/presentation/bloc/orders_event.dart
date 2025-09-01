@@ -27,3 +27,33 @@ class GetOrderByIdEvent extends OrdersEvent {
   @override
   List<Object?> get props => [orderId];
 }
+
+class LoadUserOrders extends OrdersEvent {
+  final int page;
+  final int limit;
+  final String? status;
+
+  const LoadUserOrders({
+    this.page = 1,
+    this.limit = 5,
+    this.status,
+  });
+
+  @override
+  List<Object?> get props => [page, limit, status];
+}
+
+class LoadMoreUserOrders extends OrdersEvent {
+  final int page;
+  final int limit;
+  final String? status;
+
+  const LoadMoreUserOrders({
+    required this.page,
+    this.limit = 5,
+    this.status,
+  });
+
+  @override
+  List<Object?> get props => [page, limit, status];
+}

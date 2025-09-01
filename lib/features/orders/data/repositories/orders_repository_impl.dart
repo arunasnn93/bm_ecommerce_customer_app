@@ -2,6 +2,7 @@ import '../../domain/repositories/orders_repository.dart';
 import '../../domain/entities/order.dart' as order_entity;
 import '../datasources/orders_remote_data_source.dart';
 import '../models/api_requests.dart';
+import '../models/paginated_orders_response.dart';
 
 class OrdersRepositoryImpl implements OrdersRepository {
   final OrdersRemoteDataSource remoteDataSource;
@@ -35,6 +36,28 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return orderModel; // OrderModel extends Order entity
     } catch (e) {
       throw Exception('Failed to get order: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<PaginatedOrdersResponse> getUserOrders({
+    int page = 1,
+    int limit = 5,
+    String? status,
+    String sort = 'created_at',
+    String order = 'desc',
+  }) async {
+    try {
+      final response = await remoteDataSource.getUserOrders(
+        page: page,
+        limit: limit,
+        status: status,
+        sort: sort,
+        order: order,
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to get user orders: ${e.toString()}');
     }
   }
 }

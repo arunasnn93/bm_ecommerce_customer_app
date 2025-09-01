@@ -15,6 +15,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<CreateOrderEvent>(_onCreateOrder);
     on<GetOrdersEvent>(_onGetOrders);
     on<GetOrderByIdEvent>(_onGetOrderById);
+    on<LoadUserOrders>(_onLoadUserOrders);
+    on<LoadMoreUserOrders>(_onLoadMoreUserOrders);
   }
 
   Future<void> _onCreateOrder(CreateOrderEvent event, Emitter<OrdersState> emit) async {
@@ -42,6 +44,44 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     try {
       final order = await ordersRepository.getOrderById(event.orderId);
       emit(OrderLoaded(order: order));
+    } catch (e) {
+      emit(OrdersError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onLoadUserOrders(LoadUserOrders event, Emitter<OrdersState> emit) async {
+    emit(OrdersLoading());
+    try {
+      final response = await ordersRepository.getUserOrders(
+        page: event.page,
+        limit: event.limit,
+        status: event.status,
+      );
+      emit(OrdersLoaded(
+        orders: response.orders,
+        pagination: response.pagination,
+      ));
+    } catch (e) {
+      emit(OrdersError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onLoadMoreUserOrders(LoadMoreUserOrders event, Emitter<OrdersState> emit) async {
+    try {
+      final currentState = state;
+      if (currentState is OrdersLoaded) {
+        final response = await ordersRepository.getUserOrders(
+          page: event.page,
+          limit: event.limit,
+          status: event.status,
+        );
+        
+        final updatedOrders = [...currentState.orders, ...response.orders];
+        emit(OrdersLoaded(
+          orders: updatedOrders,
+          pagination: response.pagination,
+        ));
+      }
     } catch (e) {
       emit(OrdersError(message: e.toString()));
     }
