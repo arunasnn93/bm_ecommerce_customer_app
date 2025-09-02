@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/order_model.dart';
+import 'image_preview_dialog.dart';
 
 class OrderDetailsDialog extends StatelessWidget {
   final OrderModel order;
@@ -180,17 +181,17 @@ class OrderDetailsDialog extends StatelessWidget {
         statusColor = AppColors.primary;
         displayText = 'Accepted';
         break;
-      case 'processing':
+      case 'packing':
         statusColor = AppColors.warning;
-        displayText = 'Processing';
+        displayText = 'Being Packed';
         break;
       case 'delivered':
         statusColor = AppColors.success;
         displayText = 'Delivered';
         break;
-      case 'cancelled':
+      case 'rejected':
         statusColor = AppColors.error;
-        displayText = 'Cancelled';
+        displayText = 'Store Rejected';
         break;
       default:
         statusColor = AppColors.textSecondary;
@@ -282,25 +283,49 @@ class OrderDetailsDialog extends StatelessWidget {
       itemCount: images.length,
       itemBuilder: (context, index) {
         final image = images[index];
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              image.url,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.background,
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: AppColors.textSecondary,
+        return GestureDetector(
+          onTap: () => _showImagePreview(context, image),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  Image.network(
+                    image.url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppColors.background,
+                        child: const Icon(
+                          Icons.image_not_supported,
+                          color: AppColors.textSecondary,
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                  // Zoom indicator overlay
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        Icons.zoom_in,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -339,5 +364,16 @@ class OrderDetailsDialog extends StatelessWidget {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showImagePreview(BuildContext context, OrderImageModel image) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ImagePreviewDialog(
+        imageUrl: image.url,
+        imageName: image.filename,
+      ),
+    );
   }
 }

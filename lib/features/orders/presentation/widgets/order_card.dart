@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../data/models/order_model.dart';
+import 'image_preview_dialog.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -100,28 +101,52 @@ class OrderCard extends StatelessWidget {
                     itemCount: order.orderImages.length,
                     itemBuilder: (context, index) {
                       final image = order.orderImages[index];
-                      return Container(
-                        width: 60,
-                        height: 60,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            image.url,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppColors.background,
-                                child: const Icon(
-                                  Icons.image_not_supported,
-                                  color: AppColors.textSecondary,
+                      return GestureDetector(
+                        onTap: () => _showImagePreview(context, image as OrderImageModel),
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Stack(
+                              children: [
+                                Image.network(
+                                  image.url,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: AppColors.background,
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+                                // Zoom indicator overlay
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.6),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                    child: const Icon(
+                                      Icons.zoom_in,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -228,20 +253,20 @@ class OrderCard extends StatelessWidget {
         textColor = AppColors.surface;
         displayText = 'Accepted';
         break;
-      case 'processing':
+      case 'packing':
         chipColor = AppColors.warning;
         textColor = AppColors.surface;
-        displayText = 'Processing';
+        displayText = 'Being Packed';
         break;
       case 'delivered':
         chipColor = AppColors.success;
         textColor = AppColors.surface;
         displayText = 'Delivered';
         break;
-      case 'cancelled':
+      case 'rejected':
         chipColor = AppColors.error;
         textColor = AppColors.surface;
-        displayText = 'Cancelled';
+        displayText = 'Store Rejected';
         break;
       default:
         chipColor = AppColors.textSecondary;
@@ -278,5 +303,16 @@ class OrderCard extends StatelessWidget {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+
+  void _showImagePreview(BuildContext context, OrderImageModel image) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ImagePreviewDialog(
+        imageUrl: image.url,
+        imageName: image.filename,
+      ),
+    );
   }
 }
