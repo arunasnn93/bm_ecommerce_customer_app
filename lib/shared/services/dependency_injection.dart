@@ -15,6 +15,10 @@ import '../../features/orders/data/datasources/orders_remote_data_source.dart';
 import '../../features/orders/data/repositories/orders_repository_impl.dart';
 import '../../features/orders/domain/usecases/create_order.dart';
 import '../../features/orders/presentation/bloc/orders_bloc.dart';
+import '../../features/offers/data/datasources/offers_remote_datasource.dart';
+import '../../features/offers/data/repositories/offers_repository_impl.dart';
+import '../../features/offers/domain/usecases/get_active_offers_usecase.dart';
+import '../../features/offers/presentation/bloc/offers_bloc.dart';
 
 class DependencyInjection {
   static Future<void> init() async {
@@ -72,6 +76,18 @@ class DependencyInjection {
       createOrder: createOrderUseCase,
       ordersRepository: ordersRepository,
     );
+    
+    // Offers Data Sources
+    final offersRemoteDataSource = OffersRemoteDataSource(apiClient: apiClient);
+    
+    // Offers Repository
+    final offersRepository = OffersRepositoryImpl(remoteDataSource: offersRemoteDataSource);
+    
+    // Offers Use Cases
+    final getActiveOffersUseCase = GetActiveOffersUseCase(offersRepository);
+    
+    // Offers BLoC
+    final offersBloc = OffersBloc(getActiveOffersUseCase: getActiveOffersUseCase);
     
     // Register dependencies (you can use a service locator like get_it here)
     // For now, we'll pass them directly to the app
@@ -142,5 +158,22 @@ class DependencyInjection {
       createOrder: createOrderUseCase,
       ordersRepository: ordersRepository,
     );
+  }
+  
+  static Future<OffersBloc> getOffersBloc() async {
+    // Core
+    final apiClient = ApiClient();
+    
+    // Offers Data Sources
+    final offersRemoteDataSource = OffersRemoteDataSource(apiClient: apiClient);
+    
+    // Offers Repository
+    final offersRepository = OffersRepositoryImpl(remoteDataSource: offersRemoteDataSource);
+    
+    // Offers Use Cases
+    final getActiveOffersUseCase = GetActiveOffersUseCase(offersRepository);
+    
+    // Offers BLoC
+    return OffersBloc(getActiveOffersUseCase: getActiveOffersUseCase);
   }
 }

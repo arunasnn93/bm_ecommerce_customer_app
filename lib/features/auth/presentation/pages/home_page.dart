@@ -7,6 +7,7 @@ import '../bloc/auth_bloc.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
 import '../../../orders/presentation/pages/place_order_page.dart';
 import '../../../orders/presentation/pages/order_history_page.dart';
+import '../../../offers/presentation/pages/offers_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -156,10 +157,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildSectionCard(
                   context,
-                  'Special Offers',
+                  'Offers Zone',
                   Icons.local_offer,
                   AppColors.warning,
-                  () => _showComingSoon(context, 'Special Offers'),
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const OffersPage(),
+                    ),
+                  ),
                 ),
               ],
             ),
