@@ -5,6 +5,8 @@ import 'core/constants/app_text_styles.dart';
 import 'core/config/app_config.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/home_page.dart';
 import 'features/store/presentation/bloc/store_bloc.dart';
 import 'features/orders/presentation/bloc/orders_bloc.dart';
 import 'features/offers/presentation/bloc/offers_bloc.dart';
@@ -190,6 +192,8 @@ class BeenaMartApp extends StatelessWidget {
                         home: const SplashPage(),
                         routes: {
                           '/splash': (context) => const SplashPage(),
+                          '/login': (context) => const LoginPage(),
+                          '/home': (context) => const HomePage(),
                         },
                       ),
                     );

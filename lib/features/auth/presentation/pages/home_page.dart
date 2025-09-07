@@ -3,11 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/user_service.dart';
+import '../../../../core/services/logout_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
 import '../../../orders/presentation/pages/place_order_page.dart';
 import '../../../orders/presentation/pages/order_history_page.dart';
 import '../../../offers/presentation/pages/offers_page.dart';
+import '../../../../shared/widgets/logout_confirmation_dialog.dart';
+import '../../../../shared/widgets/loading_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -68,13 +71,7 @@ class _HomePageState extends State<HomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.surface),
-            onPressed: () {
-              context.read<AuthBloc>().add(const AuthLogoutRequested());
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
-            },
+            onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
@@ -315,6 +312,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
   
+  void _showLogoutDialog(BuildContext context) {
+    LogoutConfirmationDialog.show(
+      context,
+      onConfirm: () => _performLogout(context),
+    );
+  }
+
+  void _performLogout(BuildContext context) async {
+    // Show loading dialog
+    LoadingDialog.show(
+      context,
+      message: 'Logging out...',
+    );
+
+    try {
+      // Clear all session data
+      await LogoutService.clearAllSessionData();
+      
+      // Close loading dialog
+      LoadingDialog.hide(context);
+      
+      // Navigate to login page with fallback
+      try {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      } catch (navError) {
+        // Fallback: try to pop all routes and push login
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logged out successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog
+      LoadingDialog.hide(context);
+      
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   void _showComingSoon(BuildContext context, String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

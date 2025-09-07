@@ -6,6 +6,7 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/usecases/send_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/domain/usecases/check_user_exists_usecase.dart';
+import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/store/data/datasources/store_remote_data_source.dart';
 import '../../features/store/data/repositories/store_repository_impl.dart';
@@ -42,12 +43,14 @@ class DependencyInjection {
     final sendOtpUseCase = SendOtpUseCase(authRepository);
     final verifyOtpUseCase = VerifyOtpUseCase(authRepository);
     final checkUserExistsUseCase = CheckUserExistsUseCase(authRepository);
+    final logoutUseCase = LogoutUseCase(authRepository);
     
     // Auth BLoC
     final authBloc = AuthBloc(
       sendOtpUseCase: sendOtpUseCase,
       verifyOtpUseCase: verifyOtpUseCase,
       checkUserExistsUseCase: checkUserExistsUseCase,
+      logoutUseCase: logoutUseCase,
     );
     
     // Store Data Sources
@@ -114,12 +117,14 @@ class DependencyInjection {
     final sendOtpUseCase = SendOtpUseCase(authRepository);
     final verifyOtpUseCase = VerifyOtpUseCase(authRepository);
     final checkUserExistsUseCase = CheckUserExistsUseCase(authRepository);
+    final logoutUseCase = LogoutUseCase(authRepository);
     
     // Auth BLoC
     return AuthBloc(
       sendOtpUseCase: sendOtpUseCase,
       verifyOtpUseCase: verifyOtpUseCase,
       checkUserExistsUseCase: checkUserExistsUseCase,
+      logoutUseCase: logoutUseCase,
     );
   }
   

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/usecases/send_otp_usecase.dart';
 import '../../domain/usecases/verify_otp_usecase.dart';
 import '../../domain/usecases/check_user_exists_usecase.dart';
+import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/entities/auth_result.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/entities/check_user_response.dart';
@@ -14,11 +15,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SendOtpUseCase sendOtpUseCase;
   final VerifyOtpUseCase verifyOtpUseCase;
   final CheckUserExistsUseCase checkUserExistsUseCase;
+  final LogoutUseCase logoutUseCase;
   
   AuthBloc({
     required this.sendOtpUseCase,
     required this.verifyOtpUseCase,
     required this.checkUserExistsUseCase,
+    required this.logoutUseCase,
   }) : super(AuthInitial()) {
     on<SendOtpRequested>(_onSendOtpRequested);
     on<CheckUserExistsRequested>(_onCheckUserExistsRequested);
@@ -74,8 +77,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     
-    // For now, we'll just emit initial state
-    // In real implementation, this would call logout use case
-    emit(AuthInitial());
+    final result = await logoutUseCase();
+    
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(LogoutSuccess()),
+    );
   }
 }

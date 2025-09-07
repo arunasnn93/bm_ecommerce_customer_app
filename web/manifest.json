@@ -1,11 +1,11 @@
 {
-    "name": "bm_ecommerce_customer_app",
-    "short_name": "bm_ecommerce_customer_app",
+    "name": "Beena Mart - Customer App",
+    "short_name": "Beena Mart",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#hexcode",
-    "theme_color": "#hexcode",
-    "description": "A new Flutter project.",
+    "background_color": "#2E7D32",
+    "theme_color": "#2E7D32",
+    "description": "Beena Mart - Your trusted local grocery store. Browse products, place orders, and enjoy convenient shopping.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
