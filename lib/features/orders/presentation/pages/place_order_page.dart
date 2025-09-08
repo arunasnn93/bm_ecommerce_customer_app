@@ -1,18 +1,19 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../data/models/api_requests.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
-import '../../../../core/services/jwt_service.dart';
 import '../../../../core/services/user_service.dart';
+import '../../../../core/models/file_data.dart';
+import '../../../../core/services/universal_file_picker.dart';
+import '../../../../core/services/universal_upload_service.dart';
 import '../../../../core/presentation/widgets/custom_button.dart';
 import '../../../../core/presentation/widgets/custom_text_field.dart';
 import '../widgets/cart_item_widget.dart';
 import '../widgets/add_item_dialog.dart';
-import '../widgets/image_picker_widget.dart';
+import '../widgets/universal_image_picker.dart';
 
 class PlaceOrderPage extends StatefulWidget {
   const PlaceOrderPage({Key? key}) : super(key: key);
@@ -24,7 +25,7 @@ class PlaceOrderPage extends StatefulWidget {
 class _PlaceOrderPageState extends State<PlaceOrderPage> {
   final _notesController = TextEditingController();
   final List<OrderItemRequest> _orderItems = [];
-  File? _selectedImage;
+  FileData? _selectedImage;
   String? _deliveryAddress;
   String? _deliveryPhone;
   bool _isLoading = false;
@@ -79,15 +80,9 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
     }
   }
 
-  void _pickImage(File imageFile) {
+  void _onImageSelected(FileData? imageData) {
     setState(() {
-      _selectedImage = imageFile;
-    });
-  }
-
-  void _removeImage() {
-    setState(() {
-      _selectedImage = null;
+      _selectedImage = imageData;
     });
   }
 
@@ -95,7 +90,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
     return _orderItems.isNotEmpty || _selectedImage != null;
   }
 
-  void _placeOrder() {
+  Future<void> _placeOrder() async {
     if (!_canPlaceOrder()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -106,15 +101,194 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
       return;
     }
 
-    final request = CreateOrderRequest(
-      orderItems: _orderItems,
-      deliveryAddress: _deliveryAddress ?? '',
-      deliveryPhone: _deliveryPhone ?? '',
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      image: _selectedImage,
-    );
+    // Show loading dialog
+    _showLoadingDialog();
 
-    context.read<OrdersBloc>().add(CreateOrderEvent(request: request));
+    try {
+      // Convert OrderItemRequest to Map for universal upload
+      final items = _orderItems.map((item) => {
+        'name': item.name,
+        'quantity': item.quantity,
+      }).toList();
+
+      // Additional fields
+      final additionalFields = <String, String>{
+        'delivery_address': _deliveryAddress ?? '',
+        'delivery_phone': _deliveryPhone ?? '',
+        if (_notesController.text.isNotEmpty) 'notes': _notesController.text,
+      };
+
+      // Upload order using universal service
+      final result = await UniversalUploadService.uploadOrder(
+        items: items,
+        imageData: _selectedImage,
+        additionalFields: additionalFields,
+      );
+
+      // Hide loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (result['success'] == true) {
+        // Extract order ID from response
+        final orderId = _extractOrderId(result);
+        
+        // Debug logging to understand the response structure
+        print('🔍 API Response: $result');
+        print('📋 Extracted Order ID: $orderId');
+        
+        // Show success message with order ID
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                orderId != null 
+                  ? 'Order created successfully! Order ID: $orderId'
+                  : 'Order created successfully!'
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 4), // Show longer for order ID
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } else {
+        throw Exception(result['message'] ?? 'Failed to create order');
+      }
+    } catch (e) {
+      // Hide loading dialog if still showing
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create order: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Show loading dialog while order is being created
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing while loading
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Creating your order...',
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please wait',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Extract order ID from the API response
+  String? _extractOrderId(Map<String, dynamic> result) {
+    try {
+      String? orderId;
+      
+      print('🔍 Attempting to extract order ID from result: $result');
+      
+      // Try different possible response structures
+      final data = result['data'];
+      
+      if (data is Map<String, dynamic>) {
+        print('📋 Data is Map: $data');
+        // Check common field names for order ID
+        orderId = data['id']?.toString() ?? 
+                  data['order_id']?.toString() ?? 
+                  data['orderId']?.toString() ??
+                  data['_id']?.toString();
+      } else if (data is String) {
+        print('📋 Data is String: $data');
+        
+        // Try to parse the string as JSON (in case it's a JSON string)
+        try {
+          final parsedData = jsonDecode(data);
+          if (parsedData is Map<String, dynamic>) {
+            print('📋 Parsed string data as JSON: $parsedData');
+            orderId = parsedData['id']?.toString() ?? 
+                      parsedData['order_id']?.toString() ?? 
+                      parsedData['orderId']?.toString() ??
+                      parsedData['_id']?.toString();
+          }
+        } catch (e) {
+          // If not JSON, check if it's a direct order ID
+          if (_isValidOrderId(data)) {
+            orderId = data;
+          }
+        }
+      }
+      
+      // Fallback: check if order ID is directly in result
+      orderId ??= result['id']?.toString() ?? 
+                  result['order_id']?.toString() ?? 
+                  result['orderId']?.toString() ??
+                  result['_id']?.toString();
+      
+      print('🎯 Found potential order ID: $orderId');
+      
+      // Validate that we got a proper order ID (not entire response)
+      if (orderId != null && _isValidOrderId(orderId)) {
+        print('✅ Valid order ID extracted: $orderId');
+        return orderId;
+      }
+      
+      print('❌ No valid order ID found');
+      return null;
+    } catch (e) {
+      print('❌ Error extracting order ID: $e');
+      return null;
+    }
+  }
+
+  /// Validate if the extracted string is a proper order ID
+  bool _isValidOrderId(String value) {
+    // Remove whitespace
+    value = value.trim();
+    
+    // Check if it's too long (likely entire response)
+    if (value.length > 100) {
+      return false;
+    }
+    
+    // Check if it contains JSON-like characters (likely entire response)
+    if (value.contains('{') || value.contains('[') || value.contains('}') || value.contains(']')) {
+      return false;
+    }
+    
+    // Check if it contains success/error messages
+    if (value.toLowerCase().contains('success') || 
+        value.toLowerCase().contains('error') ||
+        value.toLowerCase().contains('message')) {
+      return false;
+    }
+    
+    // Must not be empty
+    if (value.isEmpty) {
+      return false;
+    }
+    
+    return true;
   }
 
   @override
@@ -146,8 +320,6 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
         },
         child: BlocBuilder<OrdersBloc, OrdersState>(
           builder: (context, state) {
-            _isLoading = state is OrdersLoading;
-
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -230,10 +402,12 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            ImagePickerWidget(
+                            UniversalImagePicker(
                               selectedImage: _selectedImage,
-                              onImagePicked: _pickImage,
-                              onImageRemoved: _removeImage,
+                              onImageSelected: _onImageSelected,
+                              label: 'Upload Image',
+                              hint: 'Tap to select an image file (JPG, PNG, GIF, WebP)',
+                              maxFileSizeInMB: 10,
                             ),
                           ],
                         ),
@@ -275,7 +449,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
                       child: CustomButton(
                         text: 'Place Order',
                         onPressed: _placeOrder,
-                        isLoading: _isLoading,
+                        isLoading: false,
                         isEnabled: _canPlaceOrder(),
                         backgroundColor: _canPlaceOrder() 
                             ? Theme.of(context).primaryColor 

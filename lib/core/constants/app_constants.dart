@@ -3,8 +3,8 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   
   // API Constants
-  static const String baseUrl = 'https://api.beenamart.com'; // Replace with your actual API URL
-  static const String apiVersion = '/v1';
+  static const String baseUrl = 'https://api.groshly.com'; // Updated API URL
+  static const String apiVersion = '/api';
   
   // Auth API Endpoints
   static const String sendOtpEndpoint = '/auth/send-otp';
