@@ -405,7 +405,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
                             UniversalImagePicker(
                               selectedImage: _selectedImage,
                               onImageSelected: _onImageSelected,
-                              label: 'Upload Image',
+                              label: 'Upload Image of Shopping List',
                               hint: 'Tap to select an image file (JPG, PNG, GIF, WebP)',
                               maxFileSizeInMB: 10,
                             ),
