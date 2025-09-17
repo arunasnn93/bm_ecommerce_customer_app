@@ -66,6 +66,10 @@ dependencies:
   
   # 360 Degree Viewer
   photo_view: ^0.14.0
+  
+  # Web Push Notifications
+  flutter_local_notifications: ^16.3.2
+  js: ^0.6.7
 
 dev_dependencies:
   flutter_test:

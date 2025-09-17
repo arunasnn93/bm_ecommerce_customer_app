@@ -20,6 +20,14 @@ import '../../features/offers/data/datasources/offers_remote_datasource.dart';
 import '../../features/offers/data/repositories/offers_repository_impl.dart';
 import '../../features/offers/domain/usecases/get_active_offers_usecase.dart';
 import '../../features/offers/presentation/bloc/offers_bloc.dart';
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/data/repositories/notification_mock_repository.dart';
+import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_notification_read_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_all_notifications_read_usecase.dart';
+import '../../features/notifications/domain/usecases/get_unread_count_usecase.dart';
+import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 
 class DependencyInjection {
   static Future<void> init() async {
@@ -180,5 +188,30 @@ class DependencyInjection {
     
     // Offers BLoC
     return OffersBloc(getActiveOffersUseCase: getActiveOffersUseCase);
+  }
+  
+  static Future<NotificationsBloc> getNotificationsBloc() async {
+    // Core
+    final apiClient = ApiClient();
+    
+    // Notifications Data Sources
+    final notificationRemoteDataSource = NotificationRemoteDataSourceImpl(apiClient: apiClient);
+    
+    // Notifications Repository
+    final notificationRepository = NotificationRepositoryImpl(remoteDataSource: notificationRemoteDataSource);
+    
+    // Notifications Use Cases
+    final getNotificationsUseCase = GetNotificationsUseCase(repository: notificationRepository);
+    final markNotificationReadUseCase = MarkNotificationReadUseCase(repository: notificationRepository);
+    final markAllNotificationsReadUseCase = MarkAllNotificationsReadUseCase(repository: notificationRepository);
+    final getUnreadCountUseCase = GetUnreadCountUseCase(repository: notificationRepository);
+    
+    // Notifications BLoC
+    return NotificationsBloc(
+      getNotificationsUseCase: getNotificationsUseCase,
+      markNotificationReadUseCase: markNotificationReadUseCase,
+      markAllNotificationsReadUseCase: markAllNotificationsReadUseCase,
+      getUnreadCountUseCase: getUnreadCountUseCase,
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_text_styles.dart';
 import 'core/config/app_config.dart';
+import 'core/services/web_push_service.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -10,10 +11,15 @@ import 'features/auth/presentation/pages/home_page.dart';
 import 'features/store/presentation/bloc/store_bloc.dart';
 import 'features/orders/presentation/bloc/orders_bloc.dart';
 import 'features/offers/presentation/bloc/offers_bloc.dart';
+import 'features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'shared/services/dependency_injection.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Web Push Service
+  await WebPushService.initialize();
+  
   await DependencyInjection.init();
   
   // Print configuration for debugging
@@ -132,13 +138,39 @@ class BeenaMartApp extends StatelessWidget {
                     
                     final offersBloc = offersSnapshot.data!;
                     
-                                        return MultiBlocProvider(
-                      providers: [
-                        BlocProvider<AuthBloc>.value(value: authBloc),
-                        BlocProvider<StoreBloc>.value(value: storeBloc),
-                        BlocProvider<OrdersBloc>.value(value: ordersBloc),
-                        BlocProvider<OffersBloc>.value(value: offersBloc),
-                      ],
+                    return FutureBuilder<NotificationsBloc>(
+                      future: DependencyInjection.getNotificationsBloc(),
+                      builder: (context, notificationsSnapshot) {
+                        if (notificationsSnapshot.connectionState == ConnectionState.waiting) {
+                          return const MaterialApp(
+                            home: Scaffold(
+                              body: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                          );
+                        }
+                        
+                        if (notificationsSnapshot.hasError) {
+                          return MaterialApp(
+                            home: Scaffold(
+                              body: Center(
+                                child: Text('Error: ${notificationsSnapshot.error}'),
+                              ),
+                            ),
+                          );
+                        }
+                        
+                        final notificationsBloc = notificationsSnapshot.data!;
+                        
+                        return MultiBlocProvider(
+                          providers: [
+                            BlocProvider<AuthBloc>.value(value: authBloc),
+                            BlocProvider<StoreBloc>.value(value: storeBloc),
+                            BlocProvider<OrdersBloc>.value(value: ordersBloc),
+                            BlocProvider<OffersBloc>.value(value: offersBloc),
+                            BlocProvider<NotificationsBloc>.value(value: notificationsBloc),
+                          ],
                       child: MaterialApp(
                         title: 'Beena Mart',
                         debugShowCheckedModeBanner: false,
@@ -196,6 +228,8 @@ class BeenaMartApp extends StatelessWidget {
                           '/home': (context) => const HomePage(),
                         },
                       ),
+                    );
+                      },
                     );
                   },
                 );

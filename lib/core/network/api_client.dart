@@ -115,6 +115,32 @@ class ApiClient {
     }
   }
   
+  // Notification API methods
+  Future<Response> getNotifications({
+    int page = 1,
+    int limit = 20,
+    bool unreadOnly = false,
+  }) async {
+    return get('/api/notifications', queryParameters: {
+      'page': page,
+      'limit': limit,
+      'unread_only': unreadOnly,
+    });
+  }
+  
+  Future<Response> markNotificationAsRead(String notificationId) async {
+    return put('/api/notifications/$notificationId/read');
+  }
+  
+  Future<Response> markAllNotificationsAsRead() async {
+    return put('/api/notifications/read-all');
+  }
+  
+  Future<Response> getUnreadCount() async {
+    return get('/api/notifications/unread-count');
+  }
+  
+
   Exception _handleDioError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
