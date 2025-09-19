@@ -28,67 +28,29 @@ class FloatingNotification extends StatefulWidget {
   State<FloatingNotification> createState() => _FloatingNotificationState();
 }
 
-class _FloatingNotificationState extends State<FloatingNotification>
-    with TickerProviderStateMixin {
-  late AnimationController _slideController;
-  late AnimationController _fadeController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
+class _FloatingNotificationState extends State<FloatingNotification> {
   Timer? _autoHideTimer;
 
   @override
   void initState() {
     super.initState();
-    
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutBack,
-    ));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
-
-    // Start animations
-    _slideController.forward();
-    _fadeController.forward();
-
     // Auto hide timer
     _autoHideTimer = Timer(widget.autoHideDuration, () {
-      dismiss();
+      if (mounted) {
+        widget.onDismiss?.call();
+      }
     });
   }
 
   @override
   void dispose() {
-    _slideController.dispose();
-    _fadeController.dispose();
     _autoHideTimer?.cancel();
     super.dispose();
   }
 
   void dismiss() {
     _autoHideTimer?.cancel();
-    _slideController.reverse().then((_) {
-      widget.onDismiss?.call();
-    });
+    widget.onDismiss?.call();
   }
 
   Color _getNotificationColor() {
@@ -123,108 +85,97 @@ class _FloatingNotificationState extends State<FloatingNotification>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_slideAnimation, _fadeAnimation]),
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            widget.onTap?.call();
+            dismiss();
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Icon
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _getNotificationColor().withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    widget.onTap?.call();
-                    dismiss();
-                  },
-                  borderRadius: BorderRadius.circular(12),
+                  child: Icon(
+                    _getNotificationIcon(),
+                    color: _getNotificationColor(),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: AppTextStyles.h6.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.message,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Dismiss button
+                GestureDetector(
+                  onTap: dismiss,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        // Icon
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _getNotificationColor().withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            _getNotificationIcon(),
-                            color: _getNotificationColor(),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        
-                        // Content
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                widget.title,
-                                style: AppTextStyles.h6.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.message,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        // Dismiss button
-                        GestureDetector(
-                          onTap: dismiss,
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: AppColors.textSecondary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppColors.textSecondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -242,43 +193,68 @@ class FloatingNotificationManager extends StatefulWidget {
 }
 
 class _FloatingNotificationManagerState extends State<FloatingNotificationManager> {
-  final List<FloatingNotificationData> _notifications = [];
-  final SocketService _socketService = SocketService();
+  final List<NotificationItem> _notifications = [];
   StreamSubscription? _notificationSubscription;
   StreamSubscription? _orderUpdateSubscription;
 
   @override
   void initState() {
     super.initState();
-    _setupSocketListeners();
+    // Delay initialization to prevent UI freeze
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupSocketListeners();
+    });
   }
 
-  void _setupSocketListeners() {
-    // Listen to notification stream
-    _notificationSubscription = _socketService.notificationStream.listen((notification) {
-      _showNotification(
-        title: notification['title'] ?? 'Notification',
-        message: notification['message'] ?? '',
-        type: notification['type'] ?? 'info',
-        data: notification['data'],
-        onTap: () {
-          _handleNotificationTap(notification);
+  void _setupSocketListeners() async {
+    try {
+      final socketService = SocketService();
+      
+      // Initialize Socket.IO service if not already initialized
+      await socketService.initialize();
+      
+      // Listen to notification stream
+      _notificationSubscription = socketService.notificationStream.listen(
+        (notification) {
+          if (mounted) {
+            _showNotification(
+              title: notification['title'] ?? 'Notification',
+              message: notification['message'] ?? '',
+              type: notification['type'] ?? 'info',
+              data: notification['data'],
+              onTap: () {
+                _handleNotificationTap(notification);
+              },
+            );
+          }
+        },
+        onError: (error) {
+          print('Notification stream error: $error');
         },
       );
-    });
 
-    // Listen to order update stream
-    _orderUpdateSubscription = _socketService.orderUpdateStream.listen((orderUpdate) {
-      _showNotification(
-        title: 'Order Update',
-        message: orderUpdate['message'] ?? 'Your order has been updated',
-        type: 'order_update',
-        data: orderUpdate['data'],
-        onTap: () {
-          _handleOrderUpdateTap(orderUpdate);
+      // Listen to order update stream
+      _orderUpdateSubscription = socketService.orderUpdateStream.listen(
+        (orderUpdate) {
+          if (mounted) {
+            _showNotification(
+              title: 'Order Update',
+              message: orderUpdate['message'] ?? 'Your order has been updated',
+              type: 'order_update',
+              data: orderUpdate['data'],
+              onTap: () {
+                _handleOrderUpdateTap(orderUpdate);
+              },
+            );
+          }
+        },
+        onError: (error) {
+          print('Order update stream error: $error');
         },
       );
-    });
+    } catch (e) {
+      print('Error setting up socket listeners: $e');
+    }
   }
 
   void _showNotification({
@@ -288,7 +264,9 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
     Map<String, dynamic>? data,
     VoidCallback? onTap,
   }) {
-    final notificationData = FloatingNotificationData(
+    if (!mounted) return;
+
+    final notificationItem = NotificationItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       message: message,
@@ -298,16 +276,20 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
     );
 
     setState(() {
-      _notifications.add(notificationData);
+      _notifications.add(notificationItem);
     });
 
     // Auto-remove after 5 seconds
     Timer(const Duration(seconds: 5), () {
-      _removeNotification(notificationData.id);
+      if (mounted) {
+        _removeNotification(notificationItem.id);
+      }
     });
   }
 
   void _removeNotification(String id) {
+    if (!mounted) return;
+    
     setState(() {
       _notifications.removeWhere((notification) => notification.id == id);
     });
@@ -348,24 +330,25 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
       children: [
         widget.child,
         // Show notifications at the top
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Column(
-            children: _notifications.map((notificationData) {
-              return FloatingNotification(
-                key: ValueKey(notificationData.id),
-                title: notificationData.title,
-                message: notificationData.message,
-                type: notificationData.type,
-                data: notificationData.data,
-                onTap: notificationData.onTap,
-                onDismiss: () => _removeNotification(notificationData.id),
-              );
-            }).toList(),
+        if (_notifications.isNotEmpty)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: _notifications.map((notificationItem) {
+                return FloatingNotification(
+                  key: ValueKey(notificationItem.id),
+                  title: notificationItem.title,
+                  message: notificationItem.message,
+                  type: notificationItem.type,
+                  data: notificationItem.data,
+                  onTap: notificationItem.onTap,
+                  onDismiss: () => _removeNotification(notificationItem.id),
+                );
+              }).toList(),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -378,7 +361,7 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
   }
 }
 
-class FloatingNotificationData {
+class NotificationItem {
   final String id;
   final String title;
   final String message;
@@ -386,7 +369,7 @@ class FloatingNotificationData {
   final Map<String, dynamic>? data;
   final VoidCallback? onTap;
 
-  FloatingNotificationData({
+  NotificationItem({
     required this.id,
     required this.title,
     required this.message,

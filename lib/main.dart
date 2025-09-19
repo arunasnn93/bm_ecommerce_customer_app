@@ -31,8 +31,7 @@ void main() async {
     // Initialize real-time notification service
     await RealtimeNotificationService.instance.initialize();
     
-    // Initialize Socket.IO service
-    await SocketService().initialize();
+    // Note: Socket.IO will be initialized when user logs in
     
   } else {
     // Supabase not configured - real-time notifications disabled
