@@ -37,9 +37,13 @@ class SocketService {
 
       if (_accessToken == null || _userId == null) {
         print('SocketService: No access token or user ID found');
+        print('SocketService: Access token: $_accessToken');
+        print('SocketService: User ID: $_userId');
         return;
       }
 
+      print('SocketService: Initializing with token: ${_accessToken?.substring(0, 20)}...');
+      print('SocketService: User ID: $_userId');
       await _connect();
     } catch (e) {
       print('SocketService: Initialization error: $e');
@@ -54,12 +58,16 @@ class SocketService {
 
     try {
       _socket = IO.io(
-        'https://api.groshly.com', // Replace with your API URL
+        'https://api.groshly.com',
         IO.OptionBuilder()
             .setTransports(['websocket', 'polling'])
             .enableAutoConnect()
             .setAuth({'token': _accessToken})
             .setExtraHeaders({'Authorization': 'Bearer $_accessToken'})
+            .enableReconnection()
+            .setReconnectionAttempts(5)
+            .setReconnectionDelay(1000)
+            .setTimeout(20000)
             .build(),
       );
 
