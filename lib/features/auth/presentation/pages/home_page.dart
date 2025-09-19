@@ -15,8 +15,6 @@ import '../../../orders/presentation/pages/order_history_page.dart';
 import '../../../orders/presentation/pages/track_order_page.dart';
 import '../../../offers/presentation/pages/offers_page.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
-import '../../../test/presentation/pages/socket_test_page.dart';
-import '../../../test/presentation/pages/socket_debug_page.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../../../../shared/widgets/loading_dialog.dart';
 
@@ -285,33 +283,6 @@ class _HomePageState extends State<HomePage> {
             
             const SizedBox(height: 8),
             
-            _buildQuickActionCard(
-              context,
-              'Test Socket.IO',
-              'Test real-time notifications',
-              Icons.wifi,
-              AppColors.secondary,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SocketTestPage(),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            _buildQuickActionCard(
-              context,
-              'Socket Debug',
-              'Debug Socket.IO connection issues',
-              Icons.bug_report,
-              AppColors.warning,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SocketDebugPage(),
-                ),
-              ),
-            ),
             
           ],
         ),
