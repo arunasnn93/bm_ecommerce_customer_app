@@ -6,8 +6,7 @@ import 'core/constants/app_text_styles.dart';
 import 'core/config/app_config.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/realtime_notification_service.dart';
-import 'core/services/socket_service.dart';
-import 'core/widgets/floating_notification.dart';
+import 'core/widgets/simple_notification.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -180,7 +179,7 @@ class BeenaMartApp extends StatelessWidget {
                             BlocProvider<OffersBloc>.value(value: offersBloc),
                             BlocProvider<NotificationsBloc>.value(value: notificationsBloc),
                           ],
-                      child: FloatingNotificationManager(
+                      child: SimpleNotificationManager(
                         child: MaterialApp(
                         title: 'Beena Mart',
                         debugShowCheckedModeBanner: false,
