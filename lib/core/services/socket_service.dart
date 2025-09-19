@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_constants.dart';
+import 'user_service.dart';
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
@@ -32,8 +34,11 @@ class SocketService {
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _accessToken = prefs.getString('access_token');
-      _userId = prefs.getString('user_id');
+      _accessToken = prefs.getString(AppConstants.tokenKey);
+      
+      // Get user ID from user data
+      final user = await UserService.getCurrentUser();
+      _userId = user?.id;
 
       if (_accessToken == null || _userId == null) {
         print('SocketService: No access token or user ID found');
@@ -192,7 +197,7 @@ class SocketService {
     
     // Save to preferences
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('access_token', newToken);
+    await prefs.setString(AppConstants.tokenKey, newToken);
     
     // Reconnect with new token
     if (_socket != null) {
