@@ -376,4 +376,12 @@ class OrderDetailsDialog extends StatelessWidget {
       ),
     );
   }
+
+  static void show(BuildContext context, OrderModel order) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => OrderDetailsDialog(order: order),
+    );
+  }
 }

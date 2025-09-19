@@ -48,6 +48,12 @@ dependencies:
   http: ^1.1.0
   http_parser: ^4.0.2
   
+  # Supabase for real-time features
+  supabase_flutter: ^2.5.6
+  
+  # Socket.IO for real-time notifications
+  socket_io_client: ^2.0.3+1
+  
   # Local Storage
   shared_preferences: ^2.2.3
   
@@ -67,9 +73,6 @@ dependencies:
   # 360 Degree Viewer
   photo_view: ^0.14.0
   
-  # Web Push Notifications
-  flutter_local_notifications: ^16.3.2
-  js: ^0.6.7
 
 dev_dependencies:
   flutter_test:

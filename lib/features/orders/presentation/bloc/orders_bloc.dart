@@ -17,6 +17,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<GetOrderByIdEvent>(_onGetOrderById);
     on<LoadUserOrders>(_onLoadUserOrders);
     on<LoadMoreUserOrders>(_onLoadMoreUserOrders);
+    on<LoadMostRecentUndeliveredOrder>(_onLoadMostRecentUndeliveredOrder);
   }
 
   Future<void> _onCreateOrder(CreateOrderEvent event, Emitter<OrdersState> emit) async {
@@ -81,6 +82,29 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
           orders: updatedOrders,
           pagination: response.pagination,
         ));
+      }
+    } catch (e) {
+      emit(OrdersError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onLoadMostRecentUndeliveredOrder(
+    LoadMostRecentUndeliveredOrder event,
+    Emitter<OrdersState> emit,
+  ) async {
+    emit(OrdersLoading());
+    try {
+      // Load orders with undelivered statuses
+      final response = await ordersRepository.getUserOrders(
+        page: 1,
+        limit: 1,
+        status: 'submitted,accepted,packing,ready',
+      );
+      
+      if (response.orders.isNotEmpty) {
+        emit(OrdersLoaded(orders: response.orders));
+      } else {
+        emit(OrdersLoaded(orders: []));
       }
     } catch (e) {
       emit(OrdersError(message: e.toString()));

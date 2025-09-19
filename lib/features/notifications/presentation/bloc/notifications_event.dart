@@ -44,3 +44,21 @@ class RefreshNotifications extends NotificationsEvent {
 class LoadUnreadCount extends NotificationsEvent {
   const LoadUnreadCount();
 }
+
+class NewNotificationReceived extends NotificationsEvent {
+  final dynamic notification;
+
+  const NewNotificationReceived({required this.notification});
+
+  @override
+  List<Object?> get props => [notification];
+}
+
+class UnreadCountUpdated extends NotificationsEvent {
+  final int delta;
+
+  const UnreadCountUpdated({required this.delta});
+
+  @override
+  List<Object?> get props => [delta];
+}

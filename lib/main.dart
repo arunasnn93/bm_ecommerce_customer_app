@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_text_styles.dart';
 import 'core/config/app_config.dart';
-import 'core/services/web_push_service.dart';
+import 'core/config/supabase_config.dart';
+import 'core/services/realtime_notification_service.dart';
+import 'core/services/socket_service.dart';
+import 'core/widgets/floating_notification.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -17,18 +21,24 @@ import 'shared/services/dependency_injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Web Push Service
-  await WebPushService.initialize();
+  // Initialize Supabase (only if configured)
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.supabaseUrl,
+      anonKey: SupabaseConfig.supabaseAnonKey,
+    );
+    
+    // Initialize real-time notification service
+    await RealtimeNotificationService.instance.initialize();
+    
+    // Initialize Socket.IO service
+    await SocketService().initialize();
+    
+  } else {
+    // Supabase not configured - real-time notifications disabled
+  }
   
   await DependencyInjection.init();
-  
-  // Print configuration for debugging
-  print('🚀 App Configuration:');
-  print('   Environment: ${AppConfig.environment.name}');
-  print('   Base URL: ${AppConfig.baseUrl}');
-  print('   Demo Mode: ${AppConfig.useDemoMode}');
-  print('   Logging: ${AppConfig.enableLogging}');
-  print('   Full API URL: ${AppConfig.baseUrl}${AppConfig.apiVersion}');
   
   runApp(const BeenaMartApp());
 }
@@ -171,7 +181,8 @@ class BeenaMartApp extends StatelessWidget {
                             BlocProvider<OffersBloc>.value(value: offersBloc),
                             BlocProvider<NotificationsBloc>.value(value: notificationsBloc),
                           ],
-                      child: MaterialApp(
+                      child: FloatingNotificationManager(
+                        child: MaterialApp(
                         title: 'Beena Mart',
                         debugShowCheckedModeBanner: false,
                         theme: ThemeData(
@@ -227,6 +238,7 @@ class BeenaMartApp extends StatelessWidget {
                           '/login': (context) => const LoginPage(),
                           '/home': (context) => const HomePage(),
                         },
+                        ),
                       ),
                     );
                       },

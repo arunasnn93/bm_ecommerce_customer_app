@@ -4,7 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/services/user_service.dart';
 import '../../../../core/services/logout_service.dart';
-import '../../../../core/services/web_push_service.dart';
+import '../../../../core/services/notification_realtime_manager.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../notifications/presentation/bloc/notifications_bloc.dart';
 import '../../../notifications/presentation/bloc/notifications_state.dart';
@@ -12,8 +12,10 @@ import '../../../notifications/presentation/bloc/notifications_event.dart';
 import '../../../store/presentation/pages/virtual_tour_page.dart';
 import '../../../orders/presentation/pages/place_order_page.dart';
 import '../../../orders/presentation/pages/order_history_page.dart';
+import '../../../orders/presentation/pages/track_order_page.dart';
 import '../../../offers/presentation/pages/offers_page.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../test/presentation/pages/socket_test_page.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../../../../shared/widgets/loading_dialog.dart';
 
@@ -32,6 +34,14 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadWelcomeMessage();
     _loadNotifications();
+    _startRealtimeNotifications();
+  }
+  
+  @override
+  void dispose() {
+    // Stop real-time notifications when leaving the page
+    NotificationRealtimeManager.instance.stopListening();
+    super.dispose();
   }
 
   Future<void> _loadWelcomeMessage() async {
@@ -56,6 +66,25 @@ class _HomePageState extends State<HomePage> {
       print('❌ Error loading notifications: $e');
     }
   }
+  
+  void _startRealtimeNotifications() {
+    // Start real-time notifications for the current user
+    try {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthSuccess) {
+        final userId = authState.authResult.user.id;
+        final notificationsBloc = context.read<NotificationsBloc>();
+        
+        // Add a small delay to ensure everything is initialized
+        Future.delayed(const Duration(seconds: 1), () {
+          NotificationRealtimeManager.instance.startListening(notificationsBloc, userId);
+        });
+      }
+    } catch (e) {
+      // Error starting real-time notifications
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -235,301 +264,15 @@ class _HomePageState extends State<HomePage> {
               'Check the status of your recent orders',
               Icons.local_shipping,
               AppColors.success,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TrackOrderPage(),
+                ),
+              ),
             ),
             
             const SizedBox(height: 8),
             
-            // FCM Token Generation Button (for testing)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Push Notifications',
-                    style: AppTextStyles.h6.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Generate FCM token for push notifications',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                   // Request Permission Button
-                   SizedBox(
-                     width: double.infinity,
-                     child: ElevatedButton(
-                       onPressed: () async {
-                         final permission = await WebPushService.requestNotificationPermission();
-                         
-                         String message;
-                         Color backgroundColor;
-                         
-                         switch (permission) {
-                           case 'granted':
-                             message = '✅ Permission granted! You can now generate web push subscriptions.';
-                             backgroundColor = AppColors.success;
-                             break;
-                           case 'denied':
-                             message = '❌ Permission denied. Please enable notifications in your browser settings.';
-                             backgroundColor = AppColors.error;
-                             break;
-                           case 'not-supported':
-                             message = '❌ Notifications not supported in this browser.';
-                             backgroundColor = AppColors.error;
-                             break;
-                           case 'error':
-                             message = '❌ Error requesting permission. Check console for details.';
-                             backgroundColor = AppColors.error;
-                             break;
-                           default:
-                             message = 'Permission result: $permission';
-                             backgroundColor = AppColors.info;
-                         }
-                         
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           SnackBar(
-                             content: Text(message),
-                             backgroundColor: backgroundColor,
-                             duration: const Duration(seconds: 5),
-                           ),
-                         );
-                         
-                         // Show instructions dialog if permission is denied
-                         if (permission == 'denied') {
-                           showDialog(
-                             context: context,
-                             builder: (context) => AlertDialog(
-                               title: Text('Enable Notifications'),
-                               content: Column(
-                                 mainAxisSize: MainAxisSize.min,
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Text('To enable push notifications:'),
-                                   const SizedBox(height: 8),
-                                   Text('1. Click the lock icon in your browser address bar'),
-                                   Text('2. Set "Notifications" to "Allow"'),
-                                   Text('3. Refresh the page'),
-                                   Text('4. Try requesting permission again'),
-                                   const SizedBox(height: 8),
-                                   Text('Or check your browser settings:'),
-                                   const SizedBox(height: 4),
-                                   Text('• Chrome: Settings → Privacy → Site Settings → Notifications'),
-                                   Text('• Firefox: Settings → Privacy → Permissions → Notifications'),
-                                   Text('• Safari: Preferences → Websites → Notifications'),
-                                 ],
-                               ),
-                               actions: [
-                                 TextButton(
-                                   onPressed: () => Navigator.of(context).pop(),
-                                   child: Text('OK'),
-                                 ),
-                               ],
-                             ),
-                           );
-                         }
-                       },
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: AppColors.warning,
-                         foregroundColor: AppColors.surface,
-                       ),
-                       child: Text(
-                         'Request Notification Permission',
-                         style: AppTextStyles.bodyMedium.copyWith(
-                           color: AppColors.surface,
-                         ),
-                       ),
-                     ),
-                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                   // Setup Push Listener Button
-                   SizedBox(
-                     width: double.infinity,
-                     child: ElevatedButton(
-                       onPressed: () async {
-                         await WebPushService.setupPushNotificationListener();
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           SnackBar(
-                             content: Text('Web push notification listener setup completed. Check console for details.'),
-                             backgroundColor: AppColors.info,
-                           ),
-                         );
-                       },
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: AppColors.secondary,
-                         foregroundColor: AppColors.surface,
-                       ),
-                       child: Text(
-                         'Setup Web Push Listener',
-                         style: AppTextStyles.bodyMedium.copyWith(
-                           color: AppColors.surface,
-                         ),
-                       ),
-                     ),
-                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                   // Show Full Web Push Subscription Button
-                   SizedBox(
-                     width: double.infinity,
-                     child: ElevatedButton(
-                       onPressed: () async {
-                         final subscription = WebPushService.getCurrentSubscription();
-                         if (subscription != null) {
-                           showDialog(
-                             context: context,
-                             builder: (context) => AlertDialog(
-                               title: Text('Web Push Subscription'),
-                               content: Column(
-                                 mainAxisSize: MainAxisSize.min,
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Text('Web Push Subscription:'),
-                                   const SizedBox(height: 8),
-                                   Container(
-                                     padding: const EdgeInsets.all(8),
-                                     decoration: BoxDecoration(
-                                       color: AppColors.surface,
-                                       borderRadius: BorderRadius.circular(8),
-                                       border: Border.all(color: AppColors.border),
-                                     ),
-                                     child: SelectableText(
-                                       subscription,
-                                       style: AppTextStyles.bodySmall.copyWith(
-                                         fontFamily: 'monospace',
-                                       ),
-                                     ),
-                                   ),
-                                   const SizedBox(height: 8),
-                                   Text(
-                                     'This subscription is automatically sent to your backend.',
-                                     style: AppTextStyles.bodySmall.copyWith(
-                                       color: AppColors.textSecondary,
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                               actions: [
-                                 TextButton(
-                                   onPressed: () => Navigator.of(context).pop(),
-                                   child: Text('Close'),
-                                 ),
-                               ],
-                             ),
-                           );
-                         } else {
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             SnackBar(
-                               content: Text('No web push subscription available. Generate one first.'),
-                               backgroundColor: AppColors.error,
-                             ),
-                           );
-                         }
-                       },
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: AppColors.success,
-                         foregroundColor: AppColors.surface,
-                       ),
-                       child: Text(
-                         'Show Web Push Subscription',
-                         style: AppTextStyles.bodyMedium.copyWith(
-                           color: AppColors.surface,
-                         ),
-                       ),
-                     ),
-                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  Row(
-                    children: [
-                       Expanded(
-                         child: ElevatedButton(
-                           onPressed: () async {
-                             // Generate web push subscription
-                             final subscription = await WebPushService.generateWebPushSubscription();
-                             if (subscription != null) {
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 SnackBar(
-                                   content: Text('Web Push Subscription generated successfully!'),
-                                   backgroundColor: AppColors.success,
-                                 ),
-                               );
-                             } else {
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 SnackBar(
-                                   content: Text('Failed to generate web push subscription. Check console for details.'),
-                                   backgroundColor: AppColors.error,
-                                 ),
-                               );
-                             }
-                           },
-                           style: ElevatedButton.styleFrom(
-                             backgroundColor: AppColors.primary,
-                             foregroundColor: AppColors.surface,
-                           ),
-                           child: Text(
-                             'Generate Web Push Subscription',
-                             style: AppTextStyles.bodyMedium.copyWith(
-                               color: AppColors.surface,
-                             ),
-                           ),
-                         ),
-                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            // Send test notification
-                            final success = await WebPushService.sendTestNotification();
-                            if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Test notification sent successfully!'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to send test notification. Check console for details.'),
-                                  backgroundColor: AppColors.error,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.info,
-                            foregroundColor: AppColors.surface,
-                          ),
-                          child: Text(
-                            'Send Test Notification',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.surface,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 12),
             
             _buildQuickActionCard(
               context,
@@ -538,6 +281,22 @@ class _HomePageState extends State<HomePage> {
               Icons.support_agent,
               AppColors.info,
             ),
+            
+            const SizedBox(height: 8),
+            
+            _buildQuickActionCard(
+              context,
+              'Test Socket.IO',
+              'Test real-time notifications',
+              Icons.wifi,
+              AppColors.secondary,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SocketTestPage(),
+                ),
+              ),
+            ),
+            
           ],
         ),
       ),
@@ -600,16 +359,19 @@ class _HomePageState extends State<HomePage> {
     String title,
     String subtitle,
     IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
+    Color color, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
         children: [
           Container(
             width: 48,
@@ -652,7 +414,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
+    ));
   }
   
   void _showLogoutDialog(BuildContext context) {

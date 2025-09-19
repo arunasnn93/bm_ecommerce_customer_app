@@ -9,10 +9,6 @@ class ApiClient {
   ApiClient() {
     final baseUrl = AppConfig.baseUrl + AppConfig.apiVersion;
     
-    print('🔧 API Client Configuration:');
-    print('   Base URL: ${AppConfig.baseUrl}');
-    print('   API Version: ${AppConfig.apiVersion}');
-    print('   Full Base URL: $baseUrl');
     
     _dio = Dio(
       BaseOptions(
@@ -33,11 +29,6 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          if (AppConfig.enableLogging) {
-            print('🌐 API Request: ${options.method} ${options.path}');
-            print('   Headers: ${options.headers}');
-            print('   Data: ${options.data}');
-          }
           
           // Add auth token if available
           final prefs = await SharedPreferences.getInstance();
@@ -48,18 +39,9 @@ class ApiClient {
           handler.next(options);
         },
         onResponse: (response, handler) {
-          if (AppConfig.enableLogging) {
-            print('✅ API Response: ${response.statusCode} ${response.requestOptions.path}');
-            print('   Data: ${response.data}');
-          }
           handler.next(response);
         },
         onError: (error, handler) {
-          if (AppConfig.enableLogging) {
-            print('❌ API Error: ${error.type} ${error.response?.statusCode} ${error.requestOptions.path}');
-            print('   Message: ${error.message}');
-            print('   Response: ${error.response?.data}');
-          }
           
           // Handle common errors
           if (error.response?.statusCode == 401) {

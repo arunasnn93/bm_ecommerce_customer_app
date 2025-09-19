@@ -33,25 +33,6 @@
   <title>Beena Mart - Customer App</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Web Push Notifications -->
-  <script>
-    // Register Web Push Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          const registration = await navigator.serviceWorker.register('/flutter_service_worker.js');
-          console.log('🔔 Service Worker registered:', registration);
-          
-          // Make service worker registration available globally
-          window.serviceWorkerRegistration = registration;
-        } catch (error) {
-          console.error('❌ Service Worker registration failed:', error);
-        }
-      });
-    } else {
-      console.warn('⚠️ Service Worker not supported in this browser');
-    }
-  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

@@ -57,3 +57,7 @@ class LoadMoreUserOrders extends OrdersEvent {
   @override
   List<Object?> get props => [page, limit, status];
 }
+
+class LoadMostRecentUndeliveredOrder extends OrdersEvent {
+  const LoadMostRecentUndeliveredOrder();
+}
