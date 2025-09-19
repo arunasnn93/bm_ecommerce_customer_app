@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../services/socket_service.dart';
@@ -22,7 +21,7 @@ class FloatingNotification extends StatefulWidget {
     this.data,
     this.onTap,
     this.onDismiss,
-    this.autoHideDuration = const Duration(seconds: 5),
+    this.autoHideDuration = const Duration(seconds: 4),
   }) : super(key: key);
 
   @override
@@ -132,7 +131,7 @@ class _FloatingNotificationState extends State<FloatingNotification>
           child: SlideTransition(
             position: _slideAnimation,
             child: Container(
-              margin: const EdgeInsets.all(16.0),
+              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -243,8 +242,10 @@ class FloatingNotificationManager extends StatefulWidget {
 }
 
 class _FloatingNotificationManagerState extends State<FloatingNotificationManager> {
-  final List<Widget> _notifications = [];
+  final List<FloatingNotificationData> _notifications = [];
   final SocketService _socketService = SocketService();
+  StreamSubscription? _notificationSubscription;
+  StreamSubscription? _orderUpdateSubscription;
 
   @override
   void initState() {
@@ -254,7 +255,7 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
 
   void _setupSocketListeners() {
     // Listen to notification stream
-    _socketService.notificationStream.listen((notification) {
+    _notificationSubscription = _socketService.notificationStream.listen((notification) {
       _showNotification(
         title: notification['title'] ?? 'Notification',
         message: notification['message'] ?? '',
@@ -267,7 +268,7 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
     });
 
     // Listen to order update stream
-    _socketService.orderUpdateStream.listen((orderUpdate) {
+    _orderUpdateSubscription = _socketService.orderUpdateStream.listen((orderUpdate) {
       _showNotification(
         title: 'Order Update',
         message: orderUpdate['message'] ?? 'Your order has been updated',
@@ -287,21 +288,28 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
     Map<String, dynamic>? data,
     VoidCallback? onTap,
   }) {
+    final notificationData = FloatingNotificationData(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      message: message,
+      type: type,
+      data: data,
+      onTap: onTap,
+    );
+
     setState(() {
-      _notifications.add(
-        FloatingNotification(
-          title: title,
-          message: message,
-          type: type,
-          data: data,
-          onTap: onTap,
-          onDismiss: () {
-            setState(() {
-              _notifications.removeLast();
-            });
-          },
-        ),
-      );
+      _notifications.add(notificationData);
+    });
+
+    // Auto-remove after 5 seconds
+    Timer(const Duration(seconds: 5), () {
+      _removeNotification(notificationData.id);
+    });
+  }
+
+  void _removeNotification(String id) {
+    setState(() {
+      _notifications.removeWhere((notification) => notification.id == id);
     });
   }
 
@@ -339,14 +347,51 @@ class _FloatingNotificationManagerState extends State<FloatingNotificationManage
     return Stack(
       children: [
         widget.child,
-        ..._notifications,
+        // Show notifications at the top
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Column(
+            children: _notifications.map((notificationData) {
+              return FloatingNotification(
+                key: ValueKey(notificationData.id),
+                title: notificationData.title,
+                message: notificationData.message,
+                type: notificationData.type,
+                data: notificationData.data,
+                onTap: notificationData.onTap,
+                onDismiss: () => _removeNotification(notificationData.id),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }
 
   @override
   void dispose() {
-    _socketService.dispose();
+    _notificationSubscription?.cancel();
+    _orderUpdateSubscription?.cancel();
     super.dispose();
   }
+}
+
+class FloatingNotificationData {
+  final String id;
+  final String title;
+  final String message;
+  final String type;
+  final Map<String, dynamic>? data;
+  final VoidCallback? onTap;
+
+  FloatingNotificationData({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.type,
+    this.data,
+    this.onTap,
+  });
 }
