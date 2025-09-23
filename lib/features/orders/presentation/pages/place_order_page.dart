@@ -74,6 +74,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
         'bulk_items_text': _bulkItemsController.text.trim(),
         'delivery_address': _deliveryAddress ?? '',
         'delivery_phone': _deliveryPhone ?? '',
+        'total_amount': '0', // Default to 0 for bulk orders
         if (_notesController.text.isNotEmpty) 'notes': _notesController.text,
       };
 
