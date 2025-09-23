@@ -155,31 +155,31 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section
+            // Welcome Section - More Compact
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     _welcomeMessage,
-                    style: AppTextStyles.h3.copyWith(
+                    style: AppTextStyles.h4.copyWith(
                       color: AppColors.surface,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     'Discover amazing products and offers',
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.surface.withValues(alpha: 0.9),
                     ),
                   ),
@@ -187,16 +187,16 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             
-            // Main Sections Grid
+            // Main Sections Grid - More Compact
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.1,
               children: [
                 _buildSectionCard(
                   context,
@@ -245,17 +245,17 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             
-            // Quick Actions
+            // Quick Actions - More Compact
             Text(
               'Quick Actions',
-              style: AppTextStyles.h4.copyWith(
+              style: AppTextStyles.h5.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
             
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             
             _buildQuickActionCard(
               context,
@@ -270,8 +270,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             
-            const SizedBox(height: 8),
-            
+            const SizedBox(height: 6),
             
             _buildQuickActionCard(
               context,
@@ -281,7 +280,7 @@ class _HomePageState extends State<HomePage> {
               AppColors.info,
             ),
             
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             
             
           ],
@@ -302,11 +301,11 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: AppColors.shadow,
-              blurRadius: 8,
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -315,23 +314,24 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Icon(
                 icon,
-                size: 30,
+                size: 24,
                 color: color,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
               title,
-              style: AppTextStyles.h6.copyWith(
+              style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -352,39 +352,40 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               icon,
-              size: 24,
+              size: 20,
               color: color,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.h6.copyWith(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: AppTextStyles.bodySmall.copyWith(
@@ -396,7 +397,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Icon(
             Icons.arrow_forward_ios,
-            size: 16,
+            size: 14,
             color: AppColors.textSecondary,
           ),
         ],
@@ -458,13 +459,4 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature feature coming soon!'),
-        backgroundColor: AppColors.info,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 }

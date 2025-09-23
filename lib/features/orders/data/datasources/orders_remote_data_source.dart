@@ -29,7 +29,7 @@ class OrdersRemoteDataSourceImpl implements OrdersRemoteDataSource {
   Future<OrderModel> createOrder(CreateOrderRequest request) async {
     try {
       print('🛒 Creating Order API Call:');
-      print('   📦 Items: ${request.orderItems.length}');
+      print('   📝 Bulk Items Text: ${request.bulkItemsText.length} characters');
       print('   📍 Address: ${request.deliveryAddress}');
       print('   📞 Phone: ${request.deliveryPhone}');
       print('   📝 Notes: ${request.notes ?? "None"}');
@@ -37,7 +37,7 @@ class OrdersRemoteDataSourceImpl implements OrdersRemoteDataSource {
 
       // Create FormData for multipart request
       final formData = FormData.fromMap({
-        'items': jsonEncode(request.orderItems.map((item) => item.toJson()).toList()),
+        'bulk_items_text': request.bulkItemsText,
         'delivery_address': request.deliveryAddress,
         'delivery_phone': request.deliveryPhone.replaceAll('+', '').replaceAll(' ', '').replaceAll('91', ''),
         if (request.notes != null) 'notes': request.notes,

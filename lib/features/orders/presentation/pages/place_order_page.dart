@@ -1,18 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/models/api_requests.dart';
 import '../bloc/orders_bloc.dart';
-import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
 import '../../../../core/services/user_service.dart';
 import '../../../../core/models/file_data.dart';
-import '../../../../core/services/universal_file_picker.dart';
 import '../../../../core/services/universal_upload_service.dart';
 import '../../../../core/presentation/widgets/custom_button.dart';
 import '../../../../core/presentation/widgets/custom_text_field.dart';
-import '../widgets/cart_item_widget.dart';
-import '../widgets/add_item_dialog.dart';
 import '../widgets/universal_image_picker.dart';
 
 class PlaceOrderPage extends StatefulWidget {
@@ -24,11 +19,10 @@ class PlaceOrderPage extends StatefulWidget {
 
 class _PlaceOrderPageState extends State<PlaceOrderPage> {
   final _notesController = TextEditingController();
-  final List<OrderItemRequest> _orderItems = [];
+  final _bulkItemsController = TextEditingController();
   FileData? _selectedImage;
   String? _deliveryAddress;
   String? _deliveryPhone;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -48,37 +42,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
     }
   }
 
-  void _addItem() {
-    showDialog(
-      context: context,
-      builder: (context) => AddItemDialog(
-        onItemAdded: (name, quantity) {
-          setState(() {
-            _orderItems.add(OrderItemRequest(name: name, quantity: quantity));
-          });
-        },
-      ),
-    );
-  }
-
-  void _removeItem(int index) {
-    setState(() {
-      _orderItems.removeAt(index);
-    });
-  }
-
-  void _updateItemQuantity(int index, int newQuantity) {
-    if (newQuantity > 0) {
-      setState(() {
-        _orderItems[index] = OrderItemRequest(
-          name: _orderItems[index].name,
-          quantity: newQuantity,
-        );
-      });
-    } else {
-      _removeItem(index);
-    }
-  }
+  // Removed _parseBulkItems function - no longer parsing items
 
   void _onImageSelected(FileData? imageData) {
     setState(() {
@@ -87,7 +51,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
   }
 
   bool _canPlaceOrder() {
-    return _orderItems.isNotEmpty || _selectedImage != null;
+    return _bulkItemsController.text.trim().isNotEmpty || _selectedImage != null;
   }
 
   Future<void> _placeOrder() async {
@@ -105,14 +69,9 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
     _showLoadingDialog();
 
     try {
-      // Convert OrderItemRequest to Map for universal upload
-      final items = _orderItems.map((item) => {
-        'name': item.name,
-        'quantity': item.quantity,
-      }).toList();
-
       // Additional fields
       final additionalFields = <String, String>{
+        'bulk_items_text': _bulkItemsController.text.trim(),
         'delivery_address': _deliveryAddress ?? '',
         'delivery_phone': _deliveryPhone ?? '',
         if (_notesController.text.isNotEmpty) 'notes': _notesController.text,
@@ -120,7 +79,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
 
       // Upload order using universal service
       final result = await UniversalUploadService.uploadOrder(
-        items: items,
+        items: [], // No longer using individual items
         imageData: _selectedImage,
         additionalFields: additionalFields,
       );
@@ -320,21 +279,49 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
         },
         child: BlocBuilder<OrdersBloc, OrdersState>(
           builder: (context, state) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            return Column(
+              children: [
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Image Upload Section - Moved to Top
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '📷 Upload Image (Optional)',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                UniversalImagePicker(
+                                  selectedImage: _selectedImage,
+                                  onImageSelected: _onImageSelected,
+                                  label: 'Upload Image of Shopping List',
+                                  hint: 'Tap to select an image file (JPG, PNG, GIF, WebP)',
+                                  maxFileSizeInMB: 10,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Order Items Section
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // Bulk Order Items Section
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
                                   '🛒 Order Items',
@@ -343,135 +330,151 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                TextButton.icon(
-                                  onPressed: _addItem,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('Add Item'),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Type your shopping list below (one item per line)',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.shade300),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: TextField(
+                                    controller: _bulkItemsController,
+                                    maxLines: 8,
+                                    minLines: 4,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Rice 2kg\nTomatoes 1kg\nOnions 500g\nMilk 1L\nBread 1 packet\n\n💡 Tips:\n• One item per line\n• Include quantity (e.g., "2kg", "1L", "500g")\n• Examples: "Rice 2kg", "Tomatoes - 1kg", "Onions: 500g"',
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.all(12),
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height: 1.4,
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {}); // Trigger rebuild for validation
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                // Info about bulk orders
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.amber.shade200),
+                                  ),
+                                  child: const Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '💡 How it works:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        '• Type your shopping list as shown in the examples\n• Our delivery executive will read your list and calculate the total\n• You can clarify any items when they call to confirm',
+                                        style: TextStyle(fontSize: 14, color: Colors.amber),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            if (_orderItems.isEmpty)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(32),
-                                  child: Text(
-                                    'No items added yet',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _orderItems.length,
-                                itemBuilder: (context, index) {
-                                  final item = _orderItems[index];
-                                  return CartItemWidget(
-                                    name: item.name,
-                                    quantity: item.quantity,
-                                    onQuantityChanged: (newQuantity) {
-                                      _updateItemQuantity(index, newQuantity);
-                                    },
-                                    onRemove: () => _removeItem(index),
-                                  );
-                                },
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Image Upload Section
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              '📷 Upload Image (Optional)',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            UniversalImagePicker(
-                              selectedImage: _selectedImage,
-                              onImageSelected: _onImageSelected,
-                              label: 'Upload Image of Shopping List',
-                              hint: 'Tap to select an image file (JPG, PNG, GIF, WebP)',
-                              maxFileSizeInMB: 10,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Notes Section
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              '📝 Additional Notes (Optional)',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
-                              label: 'Notes',
-                              controller: _notesController,
-                              hint: 'Any special instructions or notes...',
-                              isMultiline: true,
-                              maxLines: 3,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Place Order Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomButton(
-                        text: 'Place Order',
-                        onPressed: _placeOrder,
-                        isLoading: false,
-                        isEnabled: _canPlaceOrder(),
-                        backgroundColor: _canPlaceOrder() 
-                            ? Theme.of(context).primaryColor 
-                            : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Validation Message
-                    if (!_canPlaceOrder())
-                      const Center(
-                        child: Text(
-                          '⚠️ Please add at least one item or upload an image',
-                          style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 14,
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+                        // Notes Section
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '📝 Additional Notes (Optional)',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                CustomTextField(
+                                  label: 'Notes',
+                                  controller: _notesController,
+                                  hint: 'Any special instructions or notes...',
+                                  isMultiline: true,
+                                  maxLines: 3,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 100), // Extra space for fixed button
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Fixed bottom section with Place Order button
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, -2),
                       ),
-                                     ],
-                 ),
-               );
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Validation Message
+                      if (!_canPlaceOrder())
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            '⚠️ Please add items to your order or upload an image',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      
+                      // Place Order Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: 'Place Order',
+                          onPressed: _placeOrder,
+                          isLoading: false,
+                          isEnabled: _canPlaceOrder(),
+                          backgroundColor: _canPlaceOrder() 
+                              ? Theme.of(context).primaryColor 
+                              : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
           },
         ),
       ),
@@ -481,6 +484,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
   @override
   void dispose() {
     _notesController.dispose();
+    _bulkItemsController.dispose();
     super.dispose();
   }
 }

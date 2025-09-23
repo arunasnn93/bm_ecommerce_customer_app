@@ -1,14 +1,14 @@
 import 'dart:io';
 
 class CreateOrderRequest {
-  final List<OrderItemRequest> orderItems;
+  final String bulkItemsText;
   final String deliveryAddress;
   final String deliveryPhone;
   final String? notes;
   final File? image;
 
   CreateOrderRequest({
-    required this.orderItems,
+    required this.bulkItemsText,
     required this.deliveryAddress,
     required this.deliveryPhone,
     this.notes,
@@ -17,7 +17,7 @@ class CreateOrderRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      'order_items': orderItems.map((item) => item.toJson()).toList(),
+      'bulk_items_text': bulkItemsText,
       'delivery_address': deliveryAddress,
       'delivery_phone': deliveryPhone,
       if (notes != null) 'notes': notes,
@@ -25,6 +25,7 @@ class CreateOrderRequest {
   }
 }
 
+// Keep OrderItemRequest for backward compatibility with existing code
 class OrderItemRequest {
   final String name;
   final int quantity;
