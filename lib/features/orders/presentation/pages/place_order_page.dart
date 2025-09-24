@@ -350,7 +350,7 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
                                     maxLines: 8,
                                     minLines: 4,
                                     decoration: const InputDecoration(
-                                      hintText: 'Rice 2kg\nTomatoes 1kg\nOnions 500g\nMilk 1L\nBread 1 packet\n\n💡 Tips:\n• One item per line\n• Include quantity (e.g., "2kg", "1L", "500g")\n• Examples: "Rice 2kg", "Tomatoes - 1kg", "Onions: 500g"',
+                                      hintText: '📝 Type your shopping list here...\n\n💡 Example format:\n• Rice 2kg\n• Tomatoes 1kg\n• Onions 500g\n• Milk 1L\n• Bread 1 packet\n\n📋 Tips:\n• One item per line\n• Include quantity (e.g., "2kg", "1L", "500g")\n• Use any format: "Rice 2kg", "Tomatoes - 1kg", "Onions: 500g"',
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.all(12),
                                     ),
